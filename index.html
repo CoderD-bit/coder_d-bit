@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Tic Tac Toe</title>
+  <link href="https://fonts.googleapis.com/css2?family=Pacifico&display=swap" rel="stylesheet">
+  <style>
+    body {
+      background: radial-gradient(circle at center, #1e1e1e, #121212);
+      color: white;
+      font-family: 'Segoe UI', sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      margin: 0;
+    }
+
+    h1 {
+      font-family: 'Pacifico', cursive;
+      font-size: 3rem;
+      margin-bottom: 10px;
+      color: #fefefe;
+      text-shadow: 0 2px 8px rgba(255, 255, 255, 0.2);
+    }
+
+    .round-info {
+      margin-bottom: 10px;
+      font-size: 1.1rem;
+      color: #bbb;
+    }
+
+    .scoreboard {
+      font-size: 1rem;
+      color: #ccc;
+      margin-bottom: 20px;
+    }
+
+    .board {
+      display: grid;
+      grid-template-columns: repeat(3, 100px);
+      gap: 10px;
+    }
+
+    .cell {
+      width: 100px;
+      height: 100px;
+      background-color: rgba(255, 255, 255, 0.05);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2.5rem;
+      cursor: pointer;
+      border-radius: 10px;
+      transition: background-color 0.3s;
+    }
+
+    .cell:hover {
+      background-color: rgba(255, 255, 255, 0.1);
+    }
+
+    .cell.X {
+      color: #ffd700;
+      text-shadow: 0 0 10px #ffd700, 0 0 20px #ffcc00;
+    }
+
+    .cell.O {
+      color: #00ff99;
+      text-shadow: 0 0 10px #00ff99, 0 0 20px #00cc77;
+    }
+
+    #status {
+      margin-top: 20px;
+      font-size: 1.2rem;
+    }
+
+   .popup,
+.name-popup {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(10, 10, 10, 0.3);  /* updated for translucent effect */
+  backdrop-filter: blur(10px);        /* added for blur */
+  -webkit-backdrop-filter: blur(10px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.4s ease;
+}
+
+.popup.show,
+.name-popup.show {
+  opacity: 1;
+  pointer-events: all;
+}
+
+.popup-content,
+.name-popup-content {
+  background: rgba(255, 255, 255, 0.05);  /* updated to translucent */
+  border: 1px solid rgba(255, 255, 255, 0.2); /* optional subtle border */
+  backdrop-filter: blur(25px);               /* blur on the popup box */
+  -webkit-backdrop-filter: blur(25px);
+  padding: 30px;
+  border-radius: 12px;
+  text-align: center;
+  box-shadow: 0 0 20px rgba(255, 255, 255, 0.1);
+  animation: popupIn 0.4s ease forwards;
+  color: #fff;
+}
+
+@keyframes popupIn {
+  from {
+    transform: scale(0.7);
+    opacity: 0;
+  }
+
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.popup-content button,
+.name-popup-content button {
+  margin-top: 20px;
+  padding: 10px 20px;
+  background: #00ff99;
+  border: none;
+  border-radius: 5px;
+  font-size: 1rem;
+  cursor: pointer;
+  color: #000;
+  font-weight: bold;
+}
+
+.name-popup-content input {
+  display: block;
+  width: 80%;
+  margin: 10px auto;
+  padding: 10px;
+  font-size: 1rem;
+  border: none;
+  border-radius: 5px;
+  text-align: center;
+}
+
+    #winPopup {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(10, 10, 10, 0.3); /* dark translucent */
+  backdrop-filter: blur(10px);       /* blur the background */
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+#winPopup.show {
+  display: flex;
+}
+
+#winPopup .popup-content {
+  background: rgba(255, 255, 255, 0.05); /* translucent glass effect */
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(25px);
+  -webkit-backdrop-filter: blur(25px);
+  border-radius: 16px;
+  padding: 40px 60px;
+  text-align: center;
+  color: #ffffff;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.37);
+  transition: all 0.3s ease-in-out;
+}
+
+#winPopup .popup-content button {
+  margin-top: 20px;
+  background: rgba(255, 255, 255, 0.8);
+  color: #000;
+  border: none;
+  padding: 12px 24px;
+  font-weight: bold;
+  font-size: 16px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background 0.3s ease;
+}
+
+#winPopup .popup-content button:hover {
+  background: #fff;
+}
+
+  </style>
+</head>
+
+<body>
+  <h1>Tic Tac Toe</h1>
+  <div class="round-info" id="roundDisplay">Round: 1</div>
+  <div class="scoreboard" id="scoreboard">Score — X: 0 | O: 0</div>
+  <div class="board" id="board"></div>
+  <div id="status">Loading...</div>
+
+   <!-- Win Popup -->
+  <div class="popup" id="winPopup">
+    <div class="popup-content">
+      <h2 id="popupMessage"></h2>
+      <button onclick="closePopup()">Continue</button>
+    </div>
+  </div>
+  <!-- Name & Round Entry Popup -->
+  <div class="name-popup show" id="namePopup">
+    <div class="name-popup-content">
+      <h2>Enter Player Names</h2>
+      <input type="text" id="nameX" placeholder="Player X Name" />
+      <input type="text" id="nameO" placeholder="Player O Name" />
+      <input type="number" id="roundsInput" placeholder="How many rounds?" min="1" />
+      <button onclick="startGame()">Start Game</button>
+    </div>
+  </div>
+
+<script>
+  let popupShown = false;
+  const board = document.getElementById('board');
+  const status = document.getElementById('status');
+  const winPopup = document.getElementById('winPopup');
+  const popupMessage = document.getElementById('popupMessage');
+  const roundDisplay = document.getElementById('roundDisplay');
+  const scoreboard = document.getElementById('scoreboard');
+
+  let currentPlayer = 'X';
+  let gameActive = true;
+  let cells = [];
+  let playerXName = 'Player X';
+  let playerOName = 'Player O';
+  let round = 1;
+  let totalRounds = 3;
+  let scoreX = 0;
+  let scoreO = 0;
+
+  function startGame() {
+    const nameX = document.getElementById('nameX').value.trim();
+    const nameO = document.getElementById('nameO').value.trim();
+    const rounds = parseInt(document.getElementById('roundsInput').value);
+
+    if (nameX) playerXName = nameX;
+    if (nameO) playerOName = nameO;
+    if (rounds > 0) totalRounds = rounds;
+
+    document.getElementById('namePopup').classList.remove('show');
+
+    status.textContent = `${playerXName}'s Turn (X)`;
+    roundDisplay.textContent = `Round: ${round} / ${totalRounds}`;
+    updateScoreboard(); // ✅ FIX: Update immediately
+  }
+
+  function resetBoard() {
+    currentPlayer = 'X';
+    gameActive = true;
+    cells.forEach(cell => {
+      cell.textContent = '';
+      cell.classList.remove('X', 'O');
+    });
+    if (round <= totalRounds) {
+      status.textContent = `${playerXName}'s Turn (X)`;
+      roundDisplay.textContent = `Round: ${round} / ${totalRounds}`;
+    }
+  }
+
+  function updateScoreboard() {
+    scoreboard.textContent = `Score — ${playerXName}: ${scoreX} | ${playerOName}: ${scoreO}`;
+  }
+
+  function showFinalResult() {
+    if (popupShown) return;
+    popupShown = true;
+
+    let message = "";
+
+    if (scoreX > scoreO) {
+      message = `🏆 ${playerXName} wins the game! (${scoreX} - ${scoreO})`;
+    } else if (scoreO > scoreX) {
+      message = `🏆 ${playerOName} wins the game! (${scoreO} - ${scoreX})`;
+    } else {
+      message = `🤝 It's a tie! (${scoreX} - ${scoreO})`;
+    }
+
+    popupMessage.textContent = message;
+    winPopup.classList.add('show');
+    gameActive = false;
+
+    const popupButton = document.querySelector("#winPopup button");
+    popupButton.textContent = "Play Again";
+    popupButton.onclick = () => location.reload();
+  }
+
+  function checkWin() {
+    const combos = [
+      [0, 1, 2], [3, 4, 5], [6, 7, 8],
+      [0, 3, 6], [1, 4, 7], [2, 5, 8],
+      [0, 4, 8], [2, 4, 6]
+    ];
+    return combos.find(combo => {
+      const [a, b, c] = combo;
+      return cells[a].textContent &&
+        cells[a].textContent === cells[b].textContent &&
+        cells[a].textContent === cells[c].textContent;
+    });
+  }
+
+  function handleClick(e) {
+    const cell = e.target;
+    if (!gameActive || cell.textContent) return;
+
+    cell.textContent = currentPlayer;
+    cell.classList.add(currentPlayer);
+
+    const winCombo = checkWin();
+    if (winCombo) {
+      gameActive = false;
+      const winnerName = currentPlayer === 'X' ? playerXName : playerOName;
+      popupMessage.textContent = `🎉 ${winnerName} wins this round!`;
+      winPopup.classList.add('show');
+      if (currentPlayer === 'X') scoreX++;
+      else scoreO++;
+      updateScoreboard();
+    } else if ([...cells].every(cell => cell.textContent)) {
+      gameActive = false;
+      popupMessage.textContent = "It's a draw!";
+      winPopup.classList.add('show');
+    } else {
+      currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
+      const nextPlayer = currentPlayer === 'X' ? playerXName : playerOName;
+      status.textContent = `${nextPlayer}'s Turn (${currentPlayer})`;
+    }
+  }
+
+  function closePopup() {
+    winPopup.classList.remove('show');
+    round++;
+    if (round > totalRounds) {
+      showFinalResult();
+    } else {
+      resetBoard();
+    }
+  }
+
+  function init() {
+    for (let i = 0; i < 9; i++) {
+      const cell = document.createElement('div');
+      cell.classList.add('cell');
+      cell.addEventListener('click', handleClick);
+      board.appendChild(cell);
+      cells.push(cell);
+    }
+  }
+
+  init();
+</script>
+
+</body>
+
+</html>
