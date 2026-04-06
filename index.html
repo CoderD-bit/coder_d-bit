@@ -236,14 +236,13 @@
   </div>
 
 <script>
-  
+
 let scoreX = 0;
 let scoreO = 0;
 let playerXName = "Player X";
 let playerOName = "Player O";
 let currentPlayer = "X";
 
-// 🔥 Firebase Config FIRST
 const firebaseConfig = {
   apiKey: "AIzaSyDdqkaRX5-PvcF3CZ90Zvq8NNOo6zT17SE",
   authDomain: "tic-tac-toe-0258.firebaseapp.com",
@@ -254,15 +253,13 @@ const firebaseConfig = {
   appId: "1:824935415336:web:999914ee6c5e882655bf1d"
 };
 
-// ✅ THEN initialize
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
-
-// 🎮 Game Variables
 let roomId = "";
 let playerSymbol = "";
-let boardState = ["", "", "", "", "", "", "", "", ""];
+let boardState = ["","","","","","","","",""];
+let cells = [];
 
 // 🏠 Create Room
 function createRoom() {
@@ -272,73 +269,15 @@ function createRoom() {
   playerSymbol = "X";
 
   db.ref("rooms/" + roomId).set({
-  board: boardState,
-  turn: "X"
-});
-
-  function listenGame() {
-  db.ref("rooms/" + roomId).on("value", (snapshot) => {
-    const data = snapshot.val();
-    if (!data) return;
-
-    boardState = data.board;
-    currentPlayer = data.turn;
-
-    updateBoardUI();
-
-    // 🔥 UPDATE STATUS TEXT
-    const currentName = currentPlayer === "X" ? playerXName : playerOName;
-    document.getElementById("status").textContent = `${currentName}'s Turn (${currentPlayer})`;
-
-    // 🔥 WIN POPUP
-    if (data.winner) {
-      showWinPopup(data.winner);
-    } else if (boardState.every(cell => cell)) {
-      showDrawPopup();
-    }
-  });
-}
-
-  function showWinPopup(winner) {
-  const popup = document.getElementById("winPopup");
-  const message = document.getElementById("popupMessage");
-
-  const winnerName = winner === "X" ? playerXName : playerOName;
-
-  message.textContent = `🎉 ${winnerName} wins this round!`;
-  popup.classList.add("show");
-
-  if (winner === "X") scoreX++;
-  else scoreO++;
-
-  updateScoreboard();
-}
-
-function showDrawPopup() {
-  const popup = document.getElementById("winPopup");
-  const message = document.getElementById("popupMessage");
-
-  message.textContent = "🤝 It's a draw!";
-  popup.classList.add("show");
-}
-
-
-  function updateScoreboard() {
-  document.getElementById("scoreboard").textContent =
-    `Score — ${playerXName}: ${scoreX} | ${playerOName}: ${scoreO}`;
-}
-
-  function closePopup() {
-  document.getElementById("winPopup").classList.remove("show");
-
-  // reset board only
-  boardState = ["","","","","","","","",""];
-
-  db.ref("rooms/" + roomId).update({
     board: boardState,
+    turn: "X",
     winner: ""
   });
+
+  listenGame();
+  alert("Room Created! Share ID: " + roomId);
 }
+
 // 🔗 Join Room
 function joinRoom() {
   roomId = document.getElementById("roomId").value;
@@ -346,7 +285,7 @@ function joinRoom() {
   listenGame();
 }
 
-// 👂 Listen for changes
+// 👂 Listen Firebase
 function listenGame() {
   db.ref("rooms/" + roomId).on("value", (snapshot) => {
     const data = snapshot.val();
@@ -356,10 +295,23 @@ function listenGame() {
     currentPlayer = data.turn;
 
     updateBoardUI();
+
+    const currentName = currentPlayer === "X" ? playerXName : playerOName;
+    document.getElementById("status").textContent =
+      `${currentName}'s Turn (${currentPlayer})`;
+
+    // 🏆 WIN
+    if (data.winner) {
+      showWinPopup(data.winner);
+    }
+    // 🤝 DRAW
+    else if (boardState.every(cell => cell)) {
+      showDrawPopup();
+    }
   });
 }
 
-// 🎯 Handle Click
+// 🎯 Click
 function handleClick(e) {
   const index = cells.indexOf(e.target);
 
@@ -376,7 +328,7 @@ function handleClick(e) {
   });
 }
 
-// 🎨 Update UI
+// 🎨 UI Update
 function updateBoardUI() {
   cells.forEach((cell, i) => {
     cell.textContent = boardState[i];
@@ -388,23 +340,51 @@ function updateBoardUI() {
   });
 }
 
-  let cells = [];
+// 🏆 Win Popup
+function showWinPopup(winner) {
+  const popup = document.getElementById("winPopup");
+  const message = document.getElementById("popupMessage");
 
-function init() {
-  const board = document.getElementById('board');
+  const winnerName = winner === "X" ? playerXName : playerOName;
 
-  for (let i = 0; i < 9; i++) {
-    const cell = document.createElement('div');
-    cell.classList.add('cell');
-    cell.addEventListener('click', handleClick);
-    board.appendChild(cell);
-    cells.push(cell);
-  }
+  message.textContent = `🎉 ${winnerName} wins this round!`;
+  popup.classList.add("show");
+
+  if (winner === "X") scoreX++;
+  else scoreO++;
+
+  updateScoreboard();
 }
 
-init();
+// 🤝 Draw Popup
+function showDrawPopup() {
+  const popup = document.getElementById("winPopup");
+  const message = document.getElementById("popupMessage");
 
-  function startGame() {
+  message.textContent = "🤝 It's a draw!";
+  popup.classList.add("show");
+}
+
+// 🔄 Close Popup
+function closePopup() {
+  document.getElementById("winPopup").classList.remove("show");
+
+  boardState = ["","","","","","","","",""];
+
+  db.ref("rooms/" + roomId).update({
+    board: boardState,
+    winner: ""
+  });
+}
+
+// 📊 Scoreboard
+function updateScoreboard() {
+  document.getElementById("scoreboard").textContent =
+    `Score — ${playerXName}: ${scoreX} | ${playerOName}: ${scoreO}`;
+}
+
+// 🎮 Start Game
+function startGame() {
   const nameX = document.getElementById('nameX').value.trim();
   const nameO = document.getElementById('nameO').value.trim();
 
@@ -412,10 +392,14 @@ init();
   if (nameO) playerOName = nameO;
 
   document.getElementById('namePopup').classList.remove('show');
-  document.getElementById('status').textContent = `${playerXName}'s Turn (X)`;
+  document.getElementById('status').textContent =
+    `${playerXName}'s Turn (X)`;
+
+  updateScoreboard();
 }
 
-  function checkWin(board) {
+// 🧠 Win Logic
+function checkWin(board) {
   const combos = [
     [0,1,2],[3,4,5],[6,7,8],
     [0,3,6],[1,4,7],[2,5,8],
@@ -430,6 +414,22 @@ init();
   }
   return null;
 }
+
+// 🔲 Init Board
+function init() {
+  const board = document.getElementById('board');
+
+  for (let i = 0; i < 9; i++) {
+    const cell = document.createElement('div');
+    cell.classList.add('cell');
+    cell.addEventListener('click', handleClick);
+    board.appendChild(cell);
+    cells.push(cell);
+  }
+}
+
+init();
+
 </script>
 
 </body>
