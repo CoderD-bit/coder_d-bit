@@ -235,144 +235,94 @@
     </div>
   </div>
 
-<script>
-  let popupShown = false;
-  const board = document.getElementById('board');
-  const status = document.getElementById('status');
-  const winPopup = document.getElementById('winPopup');
-  const popupMessage = document.getElementById('popupMessage');
-  const roundDisplay = document.getElementById('roundDisplay');
-  const scoreboard = document.getElementById('scoreboard');
+// 🔥 Firebase Setup
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import {
+  getDatabase,
+  ref,
+  set,
+  onValue,
+  update
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
-  let currentPlayer = 'X';
-  let gameActive = true;
-  let cells = [];
-  let playerXName = 'Player X';
-  let playerOName = 'Player O';
-  let round = 1;
-  let totalRounds = 3;
-  let scoreX = 0;
-  let scoreO = 0;
+const firebaseConfig = {
+  apiKey: "YOUR_KEY",
+  authDomain: "YOUR_DOMAIN",
+  projectId: "YOUR_ID",
+  databaseURL: "YOUR_DB_URL"
+};
 
-  function startGame() {
-    const nameX = document.getElementById('nameX').value.trim();
-    const nameO = document.getElementById('nameO').value.trim();
-    const rounds = parseInt(document.getElementById('roundsInput').value);
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
 
-    if (nameX) playerXName = nameX;
-    if (nameO) playerOName = nameO;
-    if (rounds > 0) totalRounds = rounds;
+// 🎮 Game Variables
+let roomId = "";
+let playerSymbol = "";
+let boardState = ["", "", "", "", "", "", "", "", ""];
 
-    document.getElementById('namePopup').classList.remove('show');
+// 🏠 Create Room
+function createRoom() {
+  roomId = Math.random().toString(36).substring(2, 7);
+  document.getElementById("roomId").value = roomId;
 
-    status.textContent = `${playerXName}'s Turn (X)`;
-    roundDisplay.textContent = `Round: ${round} / ${totalRounds}`;
-    updateScoreboard(); // ✅ FIX: Update immediately
-  }
+  playerSymbol = "X";
 
-  function resetBoard() {
-    currentPlayer = 'X';
-    gameActive = true;
-    cells.forEach(cell => {
-      cell.textContent = '';
-      cell.classList.remove('X', 'O');
-    });
-    if (round <= totalRounds) {
-      status.textContent = `${playerXName}'s Turn (X)`;
-      roundDisplay.textContent = `Round: ${round} / ${totalRounds}`;
+  set(ref(db, "rooms/" + roomId), {
+    board: boardState,
+    turn: "X"
+  });
+
+  listenGame();
+  alert("Room Created! Share ID: " + roomId);
+}
+
+// 🔗 Join Room
+function joinRoom() {
+  roomId = document.getElementById("roomId").value;
+  playerSymbol = "O";
+  listenGame();
+}
+
+// 👂 Listen for changes
+function listenGame() {
+  const gameRef = ref(db, "rooms/" + roomId);
+
+  onValue(gameRef, (snapshot) => {
+    const data = snapshot.val();
+    if (!data) return;
+
+    boardState = data.board;
+    currentPlayer = data.turn;
+
+    updateBoardUI();
+  });
+}
+
+// 🎯 Handle Click
+function handleClick(e) {
+  const index = cells.indexOf(e.target);
+
+  if (boardState[index] || currentPlayer !== playerSymbol) return;
+
+  boardState[index] = playerSymbol;
+
+  update(ref(db, "rooms/" + roomId), {
+    board: boardState,
+    turn: playerSymbol === "X" ? "O" : "X"
+  });
+}
+
+// 🎨 Update UI
+function updateBoardUI() {
+  cells.forEach((cell, i) => {
+    cell.textContent = boardState[i];
+    cell.classList.remove("X", "O");
+
+    if (boardState[i]) {
+      cell.classList.add(boardState[i]);
     }
-  }
-
-  function updateScoreboard() {
-    scoreboard.textContent = `Score — ${playerXName}: ${scoreX} | ${playerOName}: ${scoreO}`;
-  }
-
-  function showFinalResult() {
-    if (popupShown) return;
-    popupShown = true;
-
-    let message = "";
-
-    if (scoreX > scoreO) {
-      message = `🏆 ${playerXName} wins the game! (${scoreX} - ${scoreO})`;
-    } else if (scoreO > scoreX) {
-      message = `🏆 ${playerOName} wins the game! (${scoreO} - ${scoreX})`;
-    } else {
-      message = `🤝 It's a tie! (${scoreX} - ${scoreO})`;
-    }
-
-    popupMessage.textContent = message;
-    winPopup.classList.add('show');
-    gameActive = false;
-
-    const popupButton = document.querySelector("#winPopup button");
-    popupButton.textContent = "Play Again";
-    popupButton.onclick = () => location.reload();
-  }
-
-  function checkWin() {
-    const combos = [
-      [0, 1, 2], [3, 4, 5], [6, 7, 8],
-      [0, 3, 6], [1, 4, 7], [2, 5, 8],
-      [0, 4, 8], [2, 4, 6]
-    ];
-    return combos.find(combo => {
-      const [a, b, c] = combo;
-      return cells[a].textContent &&
-        cells[a].textContent === cells[b].textContent &&
-        cells[a].textContent === cells[c].textContent;
-    });
-  }
-
-  function handleClick(e) {
-    const cell = e.target;
-    if (!gameActive || cell.textContent) return;
-
-    cell.textContent = currentPlayer;
-    cell.classList.add(currentPlayer);
-
-    const winCombo = checkWin();
-    if (winCombo) {
-      gameActive = false;
-      const winnerName = currentPlayer === 'X' ? playerXName : playerOName;
-      popupMessage.textContent = `🎉 ${winnerName} wins this round!`;
-      winPopup.classList.add('show');
-      if (currentPlayer === 'X') scoreX++;
-      else scoreO++;
-      updateScoreboard();
-    } else if ([...cells].every(cell => cell.textContent)) {
-      gameActive = false;
-      popupMessage.textContent = "It's a draw!";
-      winPopup.classList.add('show');
-    } else {
-      currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
-      const nextPlayer = currentPlayer === 'X' ? playerXName : playerOName;
-      status.textContent = `${nextPlayer}'s Turn (${currentPlayer})`;
-    }
-  }
-
-  function closePopup() {
-    winPopup.classList.remove('show');
-    round++;
-    if (round > totalRounds) {
-      showFinalResult();
-    } else {
-      resetBoard();
-    }
-  }
-
-  function init() {
-    for (let i = 0; i < 9; i++) {
-      const cell = document.createElement('div');
-      cell.classList.add('cell');
-      cell.addEventListener('click', handleClick);
-      board.appendChild(cell);
-      cells.push(cell);
-    }
-  }
-
-  init();
-</script>
+  });
+}
 
 </body>
 
