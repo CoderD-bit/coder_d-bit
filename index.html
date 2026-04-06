@@ -1,59 +1,116 @@
 <!DOCTYPE html>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
-<html lang="en">
 
+<html lang="en">
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>Tic Tac Toe</title>
 
+<link href="https://fonts.googleapis.com/css2?family=Pacifico&display=swap" rel="stylesheet">
+
 <style>
 body {
-  background: #121212;
+  background: radial-gradient(circle at center, #1e1e1e, #121212);
   color: white;
-  font-family: sans-serif;
-  text-align: center;
+  font-family: 'Segoe UI', sans-serif;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  min-height:100vh;
+  margin:0;
+}
+
+h1 {
+  font-family:'Pacifico';
+  font-size:3rem;
+}
+
+.top-controls {
+  margin:15px 0;
+}
+
+.top-controls input {
+  padding:10px;
+  border-radius:8px;
+  border:none;
+  outline:none;
+  width:160px;
+  text-align:center;
+}
+
+.top-controls button {
+  padding:10px 15px;
+  border:none;
+  border-radius:8px;
+  cursor:pointer;
+  margin:5px;
+  font-weight:bold;
+  background:#00ff99;
 }
 
 .board {
-  display: grid;
-  grid-template-columns: repeat(3, 100px);
-  gap: 10px;
-  justify-content: center;
-  margin-top: 20px;
+  display:grid;
+  grid-template-columns:repeat(3,100px);
+  gap:10px;
 }
 
 .cell {
-  width: 100px;
-  height: 100px;
-  background: #222;
-  font-size: 2rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-}
-
-.popup {
-  position: fixed;
-  top:0; left:0;
-  width:100%; height:100%;
-  background: rgba(0,0,0,0.7);
-  display:none;
-  justify-content:center;
-  align-items:center;
-}
-
-.popup.show {
+  width:100px;
+  height:100px;
+  background:rgba(255,255,255,0.05);
   display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:2.5rem;
+  cursor:pointer;
+  border-radius:10px;
 }
+
+.cell.X { color:#ffd700; }
+.cell.O { color:#00ff99; }
+
+#status {
+  margin-top:15px;
+}
+
+/* POPUP */
+.popup {
+  position:fixed;
+  top:0;left:0;
+  width:100%;height:100%;
+  background:rgba(0,0,0,0.4);
+  backdrop-filter:blur(10px);
+  display:none;
+  align-items:center;
+  justify-content:center;
+}
+
+.popup.show { display:flex; }
 
 .popup-box {
-  background:#fff;
-  color:#000;
-  padding:20px;
-  border-radius:10px;
+  background:rgba(255,255,255,0.05);
+  padding:30px;
+  border-radius:15px;
+  text-align:center;
+}
+
+.popup-box input {
+  padding:10px;
+  margin:10px;
+  border:none;
+  border-radius:5px;
+  text-align:center;
+}
+
+.popup-box button {
+  padding:10px 20px;
+  background:#00ff99;
+  border:none;
+  border-radius:5px;
+  cursor:pointer;
 }
 </style>
 </head>
@@ -62,11 +119,13 @@ body {
 
 <h1>Tic Tac Toe</h1>
 
-<input id="roomId" placeholder="Room ID">
-<button onclick="createRoom()">Create Room</button>
-<button onclick="joinRoom()">Join Room</button>
+<div class="top-controls">
+  <input id="roomId" placeholder="Room ID">
+  <button onclick="createRoom()">Create Room</button>
+  <button onclick="joinRoom()">Join Room</button>
+</div>
 
-<div id="status"></div>
+<div id="status">Create or Join Room</div>
 
 <div class="board" id="board"></div>
 
@@ -74,9 +133,9 @@ body {
 <div class="popup" id="namePopup">
   <div class="popup-box">
     <h3>Enter Names</h3>
-    <input id="nameX" placeholder="Player X"><br><br>
-    <input id="nameO" placeholder="Player O"><br><br>
-    <button onclick="startGame()">Start</button>
+    <input id="nameX" placeholder="Player X"><br>
+    <input id="nameO" placeholder="Player O"><br>
+    <button onclick="startGame()">Start Game</button>
   </div>
 </div>
 
@@ -84,41 +143,37 @@ body {
 <div class="popup" id="winPopup">
   <div class="popup-box">
     <h2 id="popupMessage"></h2>
-    <button onclick="closePopup()">Continue</button>
+    <button onclick="closePopup()">Next</button>
   </div>
 </div>
 
 <script>
-
-// Firebase
+// 🔥 Firebase
 const firebaseConfig = {
   apiKey: "AIzaSyDdqkaRX5-PvcF3CZ90Zvq8NNOo6zT17SE",
   authDomain: "tic-tac-toe-0258.firebaseapp.com",
   databaseURL: "https://tic-tac-toe-0258-default-rtdb.firebaseio.com",
   projectId: "tic-tac-toe-0258",
-  storageBucket: "tic-tac-toe-0258.firebasestorage.app",
-  messagingSenderId: "824935415336",
-  appId: "1:824935415336:web:999914ee6c5e882655bf1d",
-  measurementId: "G-D2ZT9QSJ2Z"
 };
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
-// Variables
+// 🎮 Variables
 let roomId = "";
 let playerSymbol = "";
 let boardState = ["","","","","","","","",""];
-let cells = [];
 let currentPlayer = "X";
-let playerXName = "X";
-let playerOName = "O";
+let cells = [];
 
-// Create Room
-function createRoom() {
+let playerXName="X";
+let playerOName="O";
+
+// 🏠 CREATE ROOM
+function createRoom(){
   roomId = Math.random().toString(36).substr(2,5);
   document.getElementById("roomId").value = roomId;
 
-  playerSymbol = "X";
+  playerSymbol="X";
 
   db.ref("rooms/"+roomId).set({
     board: boardState,
@@ -126,14 +181,13 @@ function createRoom() {
     winner: ""
   });
 
-  alert("Room ID: " + roomId);
+  alert("Room ID: "+roomId);
 
-  // 👉 SHOW NAME POPUP
   document.getElementById("namePopup").classList.add("show");
 }
 
-// Join Room
-function joinRoom() {
+// 🔗 JOIN ROOM
+function joinRoom(){
   roomId = document.getElementById("roomId").value;
 
   if(!roomId){
@@ -141,24 +195,15 @@ function joinRoom() {
     return;
   }
 
-  playerSymbol = "O";
+  playerSymbol="O";
 
-  // 👉 SHOW NAME POPUP
   document.getElementById("namePopup").classList.add("show");
 }
 
-// Start Game
-function startGame() {
-  const nameX = document.getElementById("nameX").value;
-  const nameO = document.getElementById("nameO").value;
-
-  if(!nameX || !nameO){
-    alert("Enter both names");
-    return;
-  }
-
-  playerXName = nameX;
-  playerOName = nameO;
+// 🚀 START GAME
+function startGame(){
+  playerXName = document.getElementById("nameX").value || "X";
+  playerOName = document.getElementById("nameO").value || "O";
 
   db.ref("rooms/"+roomId).update({
     playerXName,
@@ -170,7 +215,7 @@ function startGame() {
   listenGame();
 }
 
-// Listen Firebase
+// 👂 LISTEN
 function listenGame(){
   db.ref("rooms/"+roomId).on("value", snap=>{
     const data = snap.val();
@@ -179,8 +224,8 @@ function listenGame(){
     boardState = data.board;
     currentPlayer = data.turn;
 
-    if(data.playerXName) playerXName = data.playerXName;
-    if(data.playerOName) playerOName = data.playerOName;
+    if(data.playerXName) playerXName=data.playerXName;
+    if(data.playerOName) playerOName=data.playerOName;
 
     updateUI();
 
@@ -190,13 +235,13 @@ function listenGame(){
   });
 }
 
-// Click
+// 🎯 CLICK
 function handleClick(e){
   const index = cells.indexOf(e.target);
 
-  if(boardState[index] || currentPlayer !== playerSymbol) return;
+  if(boardState[index] || currentPlayer!==playerSymbol) return;
 
-  boardState[index] = playerSymbol;
+  boardState[index]=playerSymbol;
 
   const winner = checkWin(boardState);
 
@@ -207,28 +252,29 @@ function handleClick(e){
   });
 }
 
-// UI update
+// 🎨 UI
 function updateUI(){
   cells.forEach((c,i)=>{
     c.textContent = boardState[i];
+    c.className="cell "+boardState[i];
   });
 
   document.getElementById("status").textContent =
     (currentPlayer==="X"?playerXName:playerOName)+" Turn";
 }
 
-// Win
+// 🏆 WIN
 function showWin(w){
   document.getElementById("popupMessage").textContent =
     (w==="X"?playerXName:playerOName)+" Wins!";
   document.getElementById("winPopup").classList.add("show");
 }
 
-// Close popup
+// 🔄 RESET
 function closePopup(){
   document.getElementById("winPopup").classList.remove("show");
 
-  boardState = ["","","","","","","","",""];
+  boardState=["","","","","","","","",""];
 
   db.ref("rooms/"+roomId).update({
     board: boardState,
@@ -236,7 +282,7 @@ function closePopup(){
   });
 }
 
-// Check win
+// 🧠 CHECK WIN
 function checkWin(b){
   const c=[[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
   for(let i of c){
@@ -244,9 +290,9 @@ function checkWin(b){
   }
 }
 
-// Init board
+// 🔲 INIT
 function init(){
-  const board = document.getElementById("board");
+  const board=document.getElementById("board");
   for(let i=0;i<9;i++){
     const d=document.createElement("div");
     d.className="cell";
