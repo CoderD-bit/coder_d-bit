@@ -225,7 +225,7 @@
     </div>
   </div>
   <!-- Name & Round Entry Popup -->
-  <div class="name-popup show" id="namePopup">
+  <div class="name-popup" id="namePopup">
     <div class="name-popup-content">
       <h2>Enter Player Names</h2>
       <input type="text" id="nameX" placeholder="Player X Name" />
@@ -274,10 +274,38 @@ function createRoom() {
     winner: ""
   });
 
-  listenGame();
+  // 🔥 SHOW NAME POPUP AFTER ROOM CREATED
+  document.getElementById("namePopup").classList.add("show");
+
   alert("Room Created! Share ID: " + roomId);
 }
 
+// 🎮 Start Game
+function startGame() {
+  const nameX = document.getElementById('nameX').value.trim();
+  const nameO = document.getElementById('nameO').value.trim();
+
+  if (!nameX || !nameO) {
+    alert("Please enter both player names");
+    return;
+  }
+
+  playerXName = nameX;
+  playerOName = nameO;
+
+  document.getElementById('namePopup').classList.remove('show');
+
+  document.getElementById('status').textContent =
+    `${playerXName}'s Turn (X)`;
+
+  updateScoreboard();
+
+  // 🔥 START LISTENING AFTER GAME START
+  listenGame();
+}
+
+
+  
 // 🔗 Join Room
 function joinRoom() {
   roomId = document.getElementById("roomId").value;
@@ -383,20 +411,6 @@ function updateScoreboard() {
     `Score — ${playerXName}: ${scoreX} | ${playerOName}: ${scoreO}`;
 }
 
-// 🎮 Start Game
-function startGame() {
-  const nameX = document.getElementById('nameX').value.trim();
-  const nameO = document.getElementById('nameO').value.trim();
-
-  if (nameX) playerXName = nameX;
-  if (nameO) playerOName = nameO;
-
-  document.getElementById('namePopup').classList.remove('show');
-  document.getElementById('status').textContent =
-    `${playerXName}'s Turn (X)`;
-
-  updateScoreboard();
-}
 
 // 🧠 Win Logic
 function checkWin(board) {
