@@ -240,6 +240,7 @@ i <!DOCTYPE html>
 const app = firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
+// 🔥 Firebase Config FIRST
 const firebaseConfig = {
   apiKey: "AIzaSyDdqkaRX5-PvcF3CZ90Zvq8NNOo6zT17SE",
   authDomain: "tic-tac-toe-0258.firebaseapp.com",
@@ -247,12 +248,13 @@ const firebaseConfig = {
   projectId: "tic-tac-toe-0258",
   storageBucket: "tic-tac-toe-0258.firebasestorage.app",
   messagingSenderId: "824935415336",
-  appId: "1:824935415336:web:999914ee6c5e882655bf1d",
-  measurementId: "G-D2ZT9QSJ2Z"
+  appId: "1:824935415336:web:999914ee6c5e882655bf1d"
 };
 
-const app = initializeApp(firebaseConfig);
-const db = getDatabase(app);
+// ✅ THEN initialize
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+
 
 // 🎮 Game Variables
 let roomId = "";
@@ -320,6 +322,22 @@ function updateBoardUI() {
     }
   });
 }
+
+  let cells = [];
+
+function init() {
+  const board = document.getElementById('board');
+
+  for (let i = 0; i < 9; i++) {
+    const cell = document.createElement('div');
+    cell.classList.add('cell');
+    cell.addEventListener('click', handleClick);
+    board.appendChild(cell);
+    cells.push(cell);
+  }
+}
+
+init();
 </script>
 
 </body>
