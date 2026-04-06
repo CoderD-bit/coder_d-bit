@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+i <!DOCTYPE html>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js"></script>
 <html lang="en">
@@ -213,7 +213,7 @@
   <input type="text" id="roomId" placeholder="Enter Room ID" />
   <button onclick="createRoom()">Create Room</button>
   <button onclick="joinRoom()">Join Room</button>
-  </div>
+</div>
   <div class="board" id="board"></div>
   <div id="status">Loading...</div>
 
@@ -235,7 +235,8 @@
     </div>
   </div>
 
-// 🔥 Firebase Setup
+<script>
+  // 🔥 Firebase Setup
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {
   getDatabase,
@@ -323,7 +324,11 @@ function updateBoardUI() {
     }
   });
 }
+</script>
 
 </body>
 
 </html>
+
+
+uploaded in github and deploy 
