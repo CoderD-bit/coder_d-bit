@@ -4,245 +4,93 @@
 <html lang="en">
 
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Tic Tac Toe</title>
-  <link href="https://fonts.googleapis.com/css2?family=Pacifico&display=swap" rel="stylesheet">
-  <style>
-    body {
-      background: radial-gradient(circle at center, #1e1e1e, #121212);
-      color: white;
-      font-family: 'Segoe UI', sans-serif;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      min-height: 100vh;
-      margin: 0;
-    }
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Tic Tac Toe</title>
 
-    h1 {
-      font-family: 'Pacifico', cursive;
-      font-size: 3rem;
-      margin-bottom: 10px;
-      color: #fefefe;
-      text-shadow: 0 2px 8px rgba(255, 255, 255, 0.2);
-    }
+<style>
+body {
+  background: #121212;
+  color: white;
+  font-family: sans-serif;
+  text-align: center;
+}
 
-    .round-info {
-      margin-bottom: 10px;
-      font-size: 1.1rem;
-      color: #bbb;
-    }
+.board {
+  display: grid;
+  grid-template-columns: repeat(3, 100px);
+  gap: 10px;
+  justify-content: center;
+  margin-top: 20px;
+}
 
-    .scoreboard {
-      font-size: 1rem;
-      color: #ccc;
-      margin-bottom: 20px;
-    }
-
-    .board {
-      display: grid;
-      grid-template-columns: repeat(3, 100px);
-      gap: 10px;
-    }
-
-    .cell {
-      width: 100px;
-      height: 100px;
-      background-color: rgba(255, 255, 255, 0.05);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 2.5rem;
-      cursor: pointer;
-      border-radius: 10px;
-      transition: background-color 0.3s;
-    }
-
-    .cell:hover {
-      background-color: rgba(255, 255, 255, 0.1);
-    }
-
-    .cell.X {
-      color: #ffd700;
-      text-shadow: 0 0 10px #ffd700, 0 0 20px #ffcc00;
-    }
-
-    .cell.O {
-      color: #00ff99;
-      text-shadow: 0 0 10px #00ff99, 0 0 20px #00cc77;
-    }
-
-    #status {
-      margin-top: 20px;
-      font-size: 1.2rem;
-    }
-
-   .popup,
-.name-popup {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(10, 10, 10, 0.3);  /* updated for translucent effect */
-  backdrop-filter: blur(10px);        /* added for blur */
-  -webkit-backdrop-filter: blur(10px);
+.cell {
+  width: 100px;
+  height: 100px;
+  background: #222;
+  font-size: 2rem;
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 1000;
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.4s ease;
-}
-
-.popup.show,
-.name-popup.show {
-  opacity: 1;
-  pointer-events: all;
-}
-
-.popup-content,
-.name-popup-content {
-  background: rgba(255, 255, 255, 0.05);  /* updated to translucent */
-  border: 1px solid rgba(255, 255, 255, 0.2); /* optional subtle border */
-  backdrop-filter: blur(25px);               /* blur on the popup box */
-  -webkit-backdrop-filter: blur(25px);
-  padding: 30px;
-  border-radius: 12px;
-  text-align: center;
-  box-shadow: 0 0 20px rgba(255, 255, 255, 0.1);
-  animation: popupIn 0.4s ease forwards;
-  color: #fff;
-}
-
-@keyframes popupIn {
-  from {
-    transform: scale(0.7);
-    opacity: 0;
-  }
-
-  to {
-    transform: scale(1);
-    opacity: 1;
-  }
-}
-
-.popup-content button,
-.name-popup-content button {
-  margin-top: 20px;
-  padding: 10px 20px;
-  background: #00ff99;
-  border: none;
-  border-radius: 5px;
-  font-size: 1rem;
   cursor: pointer;
-  color: #000;
-  font-weight: bold;
 }
 
-.name-popup-content input {
-  display: block;
-  width: 80%;
-  margin: 10px auto;
-  padding: 10px;
-  font-size: 1rem;
-  border: none;
-  border-radius: 5px;
-  text-align: center;
-}
-
-    #winPopup {
+.popup {
   position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(10, 10, 10, 0.3); /* dark translucent */
-  backdrop-filter: blur(10px);       /* blur the background */
-  display: none;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
+  top:0; left:0;
+  width:100%; height:100%;
+  background: rgba(0,0,0,0.7);
+  display:none;
+  justify-content:center;
+  align-items:center;
 }
 
-#winPopup.show {
-  display: flex;
+.popup.show {
+  display:flex;
 }
 
-#winPopup .popup-content {
-  background: rgba(255, 255, 255, 0.05); /* translucent glass effect */
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  backdrop-filter: blur(25px);
-  -webkit-backdrop-filter: blur(25px);
-  border-radius: 16px;
-  padding: 40px 60px;
-  text-align: center;
-  color: #ffffff;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.37);
-  transition: all 0.3s ease-in-out;
+.popup-box {
+  background:#fff;
+  color:#000;
+  padding:20px;
+  border-radius:10px;
 }
-
-#winPopup .popup-content button {
-  margin-top: 20px;
-  background: rgba(255, 255, 255, 0.8);
-  color: #000;
-  border: none;
-  padding: 12px 24px;
-  font-weight: bold;
-  font-size: 16px;
-  border-radius: 10px;
-  cursor: pointer;
-  transition: background 0.3s ease;
-}
-
-#winPopup .popup-content button:hover {
-  background: #fff;
-}
-
-  </style>
+</style>
 </head>
 
 <body>
-  <h1>Tic Tac Toe</h1>
-  <div class="round-info" id="roundDisplay">Round: 1</div>
-  <div class="scoreboard" id="scoreboard">Score — X: 0 | O: 0</div>
-  <div style="margin-bottom: 20px;">
-  <input type="text" id="roomId" placeholder="Enter Room ID" />
-  <button onclick="createRoom()">Create Room</button>
-  <button onclick="joinRoom()">Join Room</button>
-</div>
-  <div class="board" id="board"></div>
-  <div id="status">Loading...</div>
 
-   <!-- Win Popup -->
-  <div class="popup" id="winPopup">
-    <div class="popup-content">
-      <h2 id="popupMessage"></h2>
-      <button onclick="closePopup()">Continue</button>
-    </div>
+<h1>Tic Tac Toe</h1>
+
+<input id="roomId" placeholder="Room ID">
+<button onclick="createRoom()">Create Room</button>
+<button onclick="joinRoom()">Join Room</button>
+
+<div id="status"></div>
+
+<div class="board" id="board"></div>
+
+<!-- NAME POPUP -->
+<div class="popup" id="namePopup">
+  <div class="popup-box">
+    <h3>Enter Names</h3>
+    <input id="nameX" placeholder="Player X"><br><br>
+    <input id="nameO" placeholder="Player O"><br><br>
+    <button onclick="startGame()">Start</button>
   </div>
-  <!-- Name & Round Entry Popup -->
-  <div class="name-popup" id="namePopup">
-    <div class="name-popup-content">
-      <h2>Enter Player Names</h2>
-      <input type="text" id="nameX" placeholder="Player X Name" />
-      <input type="text" id="nameO" placeholder="Player O Name" />
-      <input type="number" id="roundsInput" placeholder="How many rounds?" min="1" />
-      <button onclick="startGame()">Start Game</button>
-    </div>
+</div>
+
+<!-- WIN POPUP -->
+<div class="popup" id="winPopup">
+  <div class="popup-box">
+    <h2 id="popupMessage"></h2>
+    <button onclick="closePopup()">Continue</button>
   </div>
+</div>
 
 <script>
 
-let scoreX = 0;
-let scoreO = 0;
-let playerXName = "Player X";
-let playerOName = "Player O";
-let currentPlayer = "X";
-
+// Firebase
 const firebaseConfig = {
   apiKey: "AIzaSyDdqkaRX5-PvcF3CZ90Zvq8NNOo6zT17SE",
   authDomain: "tic-tac-toe-0258.firebaseapp.com",
@@ -250,207 +98,166 @@ const firebaseConfig = {
   projectId: "tic-tac-toe-0258",
   storageBucket: "tic-tac-toe-0258.firebasestorage.app",
   messagingSenderId: "824935415336",
-  appId: "1:824935415336:web:999914ee6c5e882655bf1d"
+  appId: "1:824935415336:web:999914ee6c5e882655bf1d",
+  measurementId: "G-D2ZT9QSJ2Z"
 };
-
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
+// Variables
 let roomId = "";
 let playerSymbol = "";
 let boardState = ["","","","","","","","",""];
 let cells = [];
+let currentPlayer = "X";
+let playerXName = "X";
+let playerOName = "O";
 
-// 🏠 Create Room
+// Create Room
 function createRoom() {
-  roomId = Math.random().toString(36).substring(2, 7);
+  roomId = Math.random().toString(36).substr(2,5);
   document.getElementById("roomId").value = roomId;
 
   playerSymbol = "X";
 
-  db.ref("rooms/" + roomId).set({
+  db.ref("rooms/"+roomId).set({
     board: boardState,
     turn: "X",
     winner: ""
   });
 
-  // 🔥 SHOW NAME POPUP AFTER ROOM CREATED
-  document.getElementById("namePopup").classList.add("show");
+  alert("Room ID: " + roomId);
 
-  alert("Room Created! Share ID: " + roomId);
+  // 👉 SHOW NAME POPUP
+  document.getElementById("namePopup").classList.add("show");
 }
 
-// 🎮 Start Game
-function startGame() {
-  const nameX = document.getElementById('nameX').value.trim();
-  const nameO = document.getElementById('nameO').value.trim();
+// Join Room
+function joinRoom() {
+  roomId = document.getElementById("roomId").value;
 
-  if (!nameX || !nameO) {
-    alert("Please enter both player names");
+  if(!roomId){
+    alert("Enter Room ID");
+    return;
+  }
+
+  playerSymbol = "O";
+
+  // 👉 SHOW NAME POPUP
+  document.getElementById("namePopup").classList.add("show");
+}
+
+// Start Game
+function startGame() {
+  const nameX = document.getElementById("nameX").value;
+  const nameO = document.getElementById("nameO").value;
+
+  if(!nameX || !nameO){
+    alert("Enter both names");
     return;
   }
 
   playerXName = nameX;
   playerOName = nameO;
 
-  // 🔥 SAVE NAMES TO FIREBASE
-  db.ref("rooms/" + roomId).update({
-    playerXName: playerXName,
-    playerOName: playerOName
+  db.ref("rooms/"+roomId).update({
+    playerXName,
+    playerOName
   });
 
-  document.getElementById('namePopup').classList.remove('show');
-
-  updateScoreboard();
-  listenGame();
-}
-
-
-  
-// 🔗 Join Room
-function joinRoom() {
-  roomId = document.getElementById("roomId").value;
-  playerSymbol = "O";
-
-  // ❌ Don't show popup for joiner
   document.getElementById("namePopup").classList.remove("show");
 
   listenGame();
 }
-// 👂 Listen Firebase
-function listenGame() {
-  db.ref("rooms/" + roomId).on("value", (snapshot) => {
-    const data = snapshot.val();
-    if (!data) return;
+
+// Listen Firebase
+function listenGame(){
+  db.ref("rooms/"+roomId).on("value", snap=>{
+    const data = snap.val();
+    if(!data) return;
 
     boardState = data.board;
     currentPlayer = data.turn;
 
-    // 🔥 GET NAMES FROM FIREBASE
-    if (data.playerXName) playerXName = data.playerXName;
-    if (data.playerOName) playerOName = data.playerOName;
+    if(data.playerXName) playerXName = data.playerXName;
+    if(data.playerOName) playerOName = data.playerOName;
 
-    updateBoardUI();
+    updateUI();
 
-    const currentName = currentPlayer === "X" ? playerXName : playerOName;
-    document.getElementById("status").textContent =
-      `${currentName}'s Turn (${currentPlayer})`;
-
-    if (data.winner) {
-      showWinPopup(data.winner);
-    } else if (boardState.every(cell => cell)) {
-      showDrawPopup();
+    if(data.winner){
+      showWin(data.winner);
     }
   });
 }
 
-// 🎯 Click
-function handleClick(e) {
+// Click
+function handleClick(e){
   const index = cells.indexOf(e.target);
 
-  if (boardState[index] || currentPlayer !== playerSymbol) return;
+  if(boardState[index] || currentPlayer !== playerSymbol) return;
 
   boardState[index] = playerSymbol;
 
   const winner = checkWin(boardState);
 
-  db.ref("rooms/" + roomId).update({
+  db.ref("rooms/"+roomId).update({
     board: boardState,
-    turn: playerSymbol === "X" ? "O" : "X",
+    turn: playerSymbol==="X"?"O":"X",
     winner: winner || ""
   });
 }
 
-// 🎨 UI Update
-function updateBoardUI() {
-  cells.forEach((cell, i) => {
-    cell.textContent = boardState[i];
-    cell.classList.remove("X", "O");
-
-    if (boardState[i]) {
-      cell.classList.add(boardState[i]);
-    }
+// UI update
+function updateUI(){
+  cells.forEach((c,i)=>{
+    c.textContent = boardState[i];
   });
+
+  document.getElementById("status").textContent =
+    (currentPlayer==="X"?playerXName:playerOName)+" Turn";
 }
 
-// 🏆 Win Popup
-function showWinPopup(winner) {
-  const popup = document.getElementById("winPopup");
-  const message = document.getElementById("popupMessage");
-
-  const winnerName = winner === "X" ? playerXName : playerOName;
-
-  message.textContent = `🎉 ${winnerName} wins this round!`;
-  popup.classList.add("show");
-
-  if (winner === "X") scoreX++;
-  else scoreO++;
-
-  updateScoreboard();
+// Win
+function showWin(w){
+  document.getElementById("popupMessage").textContent =
+    (w==="X"?playerXName:playerOName)+" Wins!";
+  document.getElementById("winPopup").classList.add("show");
 }
 
-// 🤝 Draw Popup
-function showDrawPopup() {
-  const popup = document.getElementById("winPopup");
-  const message = document.getElementById("popupMessage");
-
-  message.textContent = "🤝 It's a draw!";
-  popup.classList.add("show");
-}
-
-// 🔄 Close Popup
-function closePopup() {
+// Close popup
+function closePopup(){
   document.getElementById("winPopup").classList.remove("show");
 
   boardState = ["","","","","","","","",""];
 
-  db.ref("rooms/" + roomId).update({
+  db.ref("rooms/"+roomId).update({
     board: boardState,
     winner: ""
   });
 }
 
-// 📊 Scoreboard
-function updateScoreboard() {
-  document.getElementById("scoreboard").textContent =
-    `Score — ${playerXName}: ${scoreX} | ${playerOName}: ${scoreO}`;
-}
-
-
-// 🧠 Win Logic
-function checkWin(board) {
-  const combos = [
-    [0,1,2],[3,4,5],[6,7,8],
-    [0,3,6],[1,4,7],[2,5,8],
-    [0,4,8],[2,4,6]
-  ];
-
-  for (let combo of combos) {
-    const [a,b,c] = combo;
-    if (board[a] && board[a] === board[b] && board[a] === board[c]) {
-      return board[a];
-    }
-  }
-  return null;
-}
-
-// 🔲 Init Board
-function init() {
-  const board = document.getElementById('board');
-
-  for (let i = 0; i < 9; i++) {
-    const cell = document.createElement('div');
-    cell.classList.add('cell');
-    cell.addEventListener('click', handleClick);
-    board.appendChild(cell);
-    cells.push(cell);
+// Check win
+function checkWin(b){
+  const c=[[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
+  for(let i of c){
+    if(b[i[0]] && b[i[0]]===b[i[1]] && b[i[1]]===b[i[2]]) return b[i[0]];
   }
 }
 
+// Init board
+function init(){
+  const board = document.getElementById("board");
+  for(let i=0;i<9;i++){
+    const d=document.createElement("div");
+    d.className="cell";
+    d.onclick=handleClick;
+    board.appendChild(d);
+    cells.push(d);
+  }
+}
 init();
 
 </script>
 
 </body>
-
 </html>
