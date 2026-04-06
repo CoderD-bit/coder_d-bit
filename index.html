@@ -55,63 +55,6 @@ body {
   padding:20px;
   border-radius:10px;
 }
-
-/* 🔲 Room Controls Container */
-.room-controls {
-  margin-top: 20px;
-}
-
-/* 🔤 Room ID Input */
-#roomId {
-  padding: 12px 15px;
-  width: 180px;
-  border-radius: 8px;
-  border: 1px solid #444;
-  background: #1e1e1e;
-  color: #fff;
-  outline: none;
-  font-size: 14px;
-  margin-right: 10px;
-  transition: 0.3s;
-}
-
-#roomId::placeholder {
-  color: #aaa;
-}
-
-#roomId:focus {
-  border-color: #00ff99;
-  box-shadow: 0 0 8px #00ff99;
-}
-
-/* 🔘 Buttons */
-.room-btn {
-  padding: 12px 18px;
-  border: none;
-  border-radius: 8px;
-  background: linear-gradient(135deg, #00ff99, #00cc77);
-  color: #000;
-  font-weight: bold;
-  cursor: pointer;
-  margin: 5px;
-  transition: all 0.3s ease;
-}
-
-/* Hover effect */
-.room-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 15px rgba(0,255,153,0.3);
-}
-
-/* Click effect */
-.room-btn:active {
-  transform: scale(0.95);
-}
-
-/* Secondary button (Join) */
-.join-btn {
-  background: linear-gradient(135deg, #4facfe, #00f2fe);
-}
 </style>
 </head>
 
@@ -119,12 +62,7 @@ body {
 
 <h1>Tic Tac Toe</h1>
 
-<div class="room-controls">
-  <input id="roomId" placeholder="Enter Room ID">
-  <br><br>
-  <button class="room-btn" onclick="createRoom()">Create Room</button>
-  <button class="room-btn join-btn" onclick="joinRoom()">Join Room</button>
-</div>
+<input id="roomId" placeholder="Room ID">
 <button onclick="createRoom()">Create Room</button>
 <button onclick="joinRoom()">Join Room</button>
 
