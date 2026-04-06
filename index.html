@@ -293,14 +293,15 @@ function startGame() {
   playerXName = nameX;
   playerOName = nameO;
 
+  // 🔥 SAVE NAMES TO FIREBASE
+  db.ref("rooms/" + roomId).update({
+    playerXName: playerXName,
+    playerOName: playerOName
+  });
+
   document.getElementById('namePopup').classList.remove('show');
 
-  document.getElementById('status').textContent =
-    `${playerXName}'s Turn (X)`;
-
   updateScoreboard();
-
-  // 🔥 START LISTENING AFTER GAME START
   listenGame();
 }
 
@@ -310,9 +311,12 @@ function startGame() {
 function joinRoom() {
   roomId = document.getElementById("roomId").value;
   playerSymbol = "O";
+
+  // ❌ Don't show popup for joiner
+  document.getElementById("namePopup").classList.remove("show");
+
   listenGame();
 }
-
 // 👂 Listen Firebase
 function listenGame() {
   db.ref("rooms/" + roomId).on("value", (snapshot) => {
@@ -322,18 +326,19 @@ function listenGame() {
     boardState = data.board;
     currentPlayer = data.turn;
 
+    // 🔥 GET NAMES FROM FIREBASE
+    if (data.playerXName) playerXName = data.playerXName;
+    if (data.playerOName) playerOName = data.playerOName;
+
     updateBoardUI();
 
     const currentName = currentPlayer === "X" ? playerXName : playerOName;
     document.getElementById("status").textContent =
       `${currentName}'s Turn (${currentPlayer})`;
 
-    // 🏆 WIN
     if (data.winner) {
       showWinPopup(data.winner);
-    }
-    // 🤝 DRAW
-    else if (boardState.every(cell => cell)) {
+    } else if (boardState.every(cell => cell)) {
       showDrawPopup();
     }
   });
