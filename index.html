@@ -1,6 +1,6 @@
 i <!DOCTYPE html>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 <html lang="en">
 
 <head>
@@ -237,14 +237,8 @@ i <!DOCTYPE html>
 
 <script>
   // 🔥 Firebase Setup
-import { initializeApp } from "https://tic-tac-toe-0258-default-rtdb.firebaseio.com/";
-import {
-  getDatabase,
-  ref,
-  set,
-  onValue,
-  update
-} from "https://tic-tac-toe-0258-default-rtdb.firebaseio.com/";
+const app = firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
 
 const firebaseConfig = {
   apiKey: "AIzaSyDdqkaRX5-PvcF3CZ90Zvq8NNOo6zT17SE",
@@ -272,10 +266,10 @@ function createRoom() {
 
   playerSymbol = "X";
 
-  set(ref(db, "rooms/" + roomId), {
-    board: boardState,
-    turn: "X"
-  });
+  db.ref("rooms/" + roomId).set({
+  board: boardState,
+  turn: "X"
+});
 
   listenGame();
   alert("Room Created! Share ID: " + roomId);
@@ -290,9 +284,7 @@ function joinRoom() {
 
 // 👂 Listen for changes
 function listenGame() {
-  const gameRef = ref(db, "rooms/" + roomId);
-
-  onValue(gameRef, (snapshot) => {
+  db.ref("rooms/" + roomId).on("value", (snapshot) => {
     const data = snapshot.val();
     if (!data) return;
 
@@ -311,10 +303,10 @@ function handleClick(e) {
 
   boardState[index] = playerSymbol;
 
-  update(ref(db, "rooms/" + roomId), {
-    board: boardState,
-    turn: playerSymbol === "X" ? "O" : "X"
-  });
+  db.ref("rooms/" + roomId).update({
+  board: boardState,
+  turn: playerSymbol === "X" ? "O" : "X"
+});
 }
 
 // 🎨 Update UI
