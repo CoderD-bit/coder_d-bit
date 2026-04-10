@@ -112,25 +112,6 @@ h1 {
   border-radius:5px;
   cursor:pointer;
 }
-
-.status-box {
-  margin-top:15px;
-  padding:12px 25px;
-  border-radius:30px;
-  background:linear-gradient(45deg,#00ff99,#00ccff);
-  color:#000;
-  font-weight:bold;
-  font-size:1.1rem;
-  box-shadow:0 0 15px rgba(0,255,153,0.5);
-  animation:pulse 1.5s infinite;
-}
-
-@keyframes pulse {
-  0% { transform:scale(1); box-shadow:0 0 10px rgba(0,255,153,0.4); }
-  50% { transform:scale(1.05); box-shadow:0 0 25px rgba(0,255,153,0.9); }
-  100% { transform:scale(1); }
-}
-  
 </style>
 </head>
 
@@ -139,14 +120,12 @@ h1 {
 <h1>Tic Tac Toe</h1>
 
 <div class="top-controls">
-  <input id="roomId" placeholder="Enter or create Room ID">
-  <button onclick="createRoom()">Create / Generate Room</button>
-<button onclick="joinRoom()">Join Room</button>
+  <input id="roomId" placeholder="Room ID">
+  <button onclick="createRoom()">Create Room</button>
+  <button onclick="joinRoom()">Join Room</button>
 </div>
 
-<div id="status" class="status-box">
-  <span id="statusText">Create or Join Room</span>
-</div>
+<div id="status">Create or Join Room</div>
 
 <div class="board" id="board"></div>
 
@@ -193,45 +172,27 @@ let cells = [];
 let playerXName="X";
 let playerOName="O";
 
-const statusBox = document.querySelector(".status-box");
-
-if(currentPlayer==="X"){
-  statusBox.style.background = "linear-gradient(45deg,#ffd700,#ff8c00)";
-} else {
-  statusBox.style.background = "linear-gradient(45deg,#00ff99,#00ccff)";
-}
-
-  
 // 🏠 CREATE ROOM
 function createRoom(){
-  let inputRoom = document.getElementById("roomId").value.trim();
-
-  // ✅ If user entered custom room
-  if(inputRoom){
-    roomId = inputRoom;
-  } 
-  // ✅ Otherwise auto-generate
-  else{
-    roomId = Math.random().toString(36).substr(2,5);
-    document.getElementById("roomId").value = roomId;
-  }
+  roomId = Math.random().toString(36).substr(2,5);
+  document.getElementById("roomId").value = roomId;
 
   playerSymbol="X";
 
   db.ref("rooms/"+roomId).set({
-    board: ["","","","","","","","",""],
+    board: boardState,
     turn: "X",
     winner: ""
   });
 
-  alert("Room Created: " + roomId);
+  alert("Room ID: "+roomId);
 
   document.getElementById("namePopup").classList.add("show");
 }
 
 // 🔗 JOIN ROOM
 function joinRoom(){
-  roomId = document.getElementById("roomId").value.trim();
+  roomId = document.getElementById("roomId").value;
 
   if(!roomId){
     alert("Enter Room ID");
@@ -240,17 +201,24 @@ function joinRoom(){
 
   playerSymbol="O";
 
-  // 🔍 Check if room exists
-  db.ref("rooms/"+roomId).once("value", snap=>{
-    if(snap.exists()){
-      document.getElementById("namePopup").classList.add("show");
-    } else {
-      alert("Room does not exist!");
-    }
-  });
+  document.getElementById("namePopup").classList.add("show");
 }
 
-  
+// 🚀 START GAME
+function startGame(){
+  playerXName = document.getElementById("nameX").value || "X";
+  playerOName = document.getElementById("nameO").value || "O";
+
+  db.ref("rooms/"+roomId).update({
+    playerXName,
+    playerOName
+  });
+
+  document.getElementById("namePopup").classList.remove("show");
+
+  listenGame();
+}
+
 // 👂 LISTEN
 function listenGame(){
   db.ref("rooms/"+roomId).on("value", snap=>{
@@ -295,7 +263,7 @@ function updateUI(){
     c.className="cell "+boardState[i];
   });
 
-  document.getElementById("statusText").textContent =
+  document.getElementById("status").textContent =
     (currentPlayer==="X"?playerXName:playerOName)+" Turn";
 }
 
