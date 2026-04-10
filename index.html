@@ -120,7 +120,7 @@ h1 {
 <h1>Tic Tac Toe</h1>
 
 <div class="top-controls">
-  <input id="roomId" placeholder="Enter or leave blank for auto room">
+  <input id="roomId" placeholder="Room ID">
   <button onclick="createRoom()">Create Room</button>
   <button onclick="joinRoom()">Join Room</button>
 </div>
@@ -174,63 +174,34 @@ let playerOName="O";
 
 // 🏠 CREATE ROOM
 function createRoom(){
-  let inputRoom = document.getElementById("roomId").value.trim();
+  roomId = Math.random().toString(36).substr(2,5);
+  document.getElementById("roomId").value = roomId;
 
-  // Decide room ID
-  if(inputRoom){
-    roomId = inputRoom;   // custom
-  } else {
-    roomId = Math.random().toString(36).substr(2,5);  // auto
-    document.getElementById("roomId").value = roomId;
-  }
+  playerSymbol="X";
 
-  playerSymbol = "X";
-
-  // 🔥 CHECK FIRST (PASTE HERE)
-  db.ref("rooms/"+roomId).once("value", snap => {
-    
-    if(snap.exists()){
-      alert("Room already exists! Choose another ID.");
-      return;
-    }
-
-    // ✅ CREATE ROOM ONLY IF NOT EXISTS
-    db.ref("rooms/"+roomId).set({
-      board: ["","","","","","","","",""],
-      turn: "X",
-      winner: "",
-      playerXName: "",
-      playerOName: ""
-    });
-
-    alert("Room ID: " + roomId);
-
-    document.getElementById("namePopup").classList.add("show");
+  db.ref("rooms/"+roomId).set({
+    board: boardState,
+    turn: "X",
+    winner: ""
   });
-}
 
+  alert("Room ID: "+roomId);
+
+  document.getElementById("namePopup").classList.add("show");
+}
 
 // 🔗 JOIN ROOM
 function joinRoom(){
-  roomId = document.getElementById("roomId").value.trim();
+  roomId = document.getElementById("roomId").value;
 
   if(!roomId){
     alert("Enter Room ID");
     return;
   }
 
-  // 🔥 CHECK IF ROOM EXISTS
-  db.ref("rooms/"+roomId).once("value", snap => {
+  playerSymbol="O";
 
-    if(!snap.exists()){
-      alert("Room does not exist!");
-      return;
-    }
-
-    playerSymbol = "O";
-
-    document.getElementById("namePopup").classList.add("show");
-  });
+  document.getElementById("namePopup").classList.add("show");
 }
 
 // 🚀 START GAME
@@ -238,14 +209,10 @@ function startGame(){
   playerXName = document.getElementById("nameX").value || "X";
   playerOName = document.getElementById("nameO").value || "O";
 
-  db.ref("rooms/"+roomId).once("value", snap=>{
-  const data = snap.val();
-
   db.ref("rooms/"+roomId).update({
-    playerXName: data.playerXName || playerXName,
-    playerOName: data.playerOName || playerOName
+    playerXName,
+    playerOName
   });
-});
 
   document.getElementById("namePopup").classList.remove("show");
 
@@ -318,9 +285,8 @@ function closePopup(){
   boardState=["","","","","","","","",""];
 
   db.ref("rooms/"+roomId).update({
-  board: boardState,
-  winner: "",
-  turn: "X"   // 🔥 reset turn
+    board: boardState,
+    winner: ""
   });
 }
 
