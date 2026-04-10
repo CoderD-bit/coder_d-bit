@@ -139,9 +139,9 @@ h1 {
 <h1>Tic Tac Toe</h1>
 
 <div class="top-controls">
-  <input id="roomId" placeholder="Room ID">
-  <button onclick="createRoom()">Create Room</button>
-  <button onclick="joinRoom()">Join Room</button>
+  <input id="roomId" placeholder="Enter or create Room ID">
+  <button onclick="createRoom()">Create / Generate Room</button>
+<button onclick="joinRoom()">Join Room</button>
 </div>
 
 <div id="status" class="status-box">
@@ -204,25 +204,34 @@ if(currentPlayer==="X"){
   
 // 🏠 CREATE ROOM
 function createRoom(){
-  roomId = Math.random().toString(36).substr(2,5);
-  document.getElementById("roomId").value = roomId;
+  let inputRoom = document.getElementById("roomId").value.trim();
+
+  // ✅ If user entered custom room
+  if(inputRoom){
+    roomId = inputRoom;
+  } 
+  // ✅ Otherwise auto-generate
+  else{
+    roomId = Math.random().toString(36).substr(2,5);
+    document.getElementById("roomId").value = roomId;
+  }
 
   playerSymbol="X";
 
   db.ref("rooms/"+roomId).set({
-    board: boardState,
+    board: ["","","","","","","","",""],
     turn: "X",
     winner: ""
   });
 
-  alert("Room ID: "+roomId);
+  alert("Room Created: " + roomId);
 
   document.getElementById("namePopup").classList.add("show");
 }
 
 // 🔗 JOIN ROOM
 function joinRoom(){
-  roomId = document.getElementById("roomId").value;
+  roomId = document.getElementById("roomId").value.trim();
 
   if(!roomId){
     alert("Enter Room ID");
@@ -231,24 +240,17 @@ function joinRoom(){
 
   playerSymbol="O";
 
-  document.getElementById("namePopup").classList.add("show");
-}
-
-// 🚀 START GAME
-function startGame(){
-  playerXName = document.getElementById("nameX").value || "X";
-  playerOName = document.getElementById("nameO").value || "O";
-
-  db.ref("rooms/"+roomId).update({
-    playerXName,
-    playerOName
+  // 🔍 Check if room exists
+  db.ref("rooms/"+roomId).once("value", snap=>{
+    if(snap.exists()){
+      document.getElementById("namePopup").classList.add("show");
+    } else {
+      alert("Room does not exist!");
+    }
   });
-
-  document.getElementById("namePopup").classList.remove("show");
-
-  listenGame();
 }
 
+  
 // 👂 LISTEN
 function listenGame(){
   db.ref("rooms/"+roomId).on("value", snap=>{
