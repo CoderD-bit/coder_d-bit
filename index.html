@@ -120,7 +120,7 @@ h1 {
 <h1>Tic Tac Toe</h1>
 
 <div class="top-controls">
-  <input id="roomId" placeholder="Room ID">
+  <input id="roomId" placeholder="Enter or leave blank for auto room">
   <button onclick="createRoom()">Create Room</button>
   <button onclick="joinRoom()">Join Room</button>
 </div>
@@ -174,21 +174,41 @@ let playerOName="O";
 
 // 🏠 CREATE ROOM
 function createRoom(){
-  roomId = Math.random().toString(36).substr(2,5);
-  document.getElementById("roomId").value = roomId;
+  let inputRoom = document.getElementById("roomId").value.trim();
 
-  playerSymbol="X";
+  // Decide room ID
+  if(inputRoom){
+    roomId = inputRoom;   // custom
+  } else {
+    roomId = Math.random().toString(36).substr(2,5);  // auto
+    document.getElementById("roomId").value = roomId;
+  }
 
-  db.ref("rooms/"+roomId).set({
-    board: boardState,
-    turn: "X",
-    winner: ""
+  playerSymbol = "X";
+
+  // 🔥 CHECK FIRST (PASTE HERE)
+  db.ref("rooms/"+roomId).once("value", snap => {
+    
+    if(snap.exists()){
+      alert("Room already exists! Choose another ID.");
+      return;
+    }
+
+    // ✅ CREATE ROOM ONLY IF NOT EXISTS
+    db.ref("rooms/"+roomId).set({
+      board: ["","","","","","","","",""],
+      turn: "X",
+      winner: "",
+      playerXName: "",
+      playerOName: ""
+    });
+
+    alert("Room ID: " + roomId);
+
+    document.getElementById("namePopup").classList.add("show");
   });
-
-  alert("Room ID: "+roomId);
-
-  document.getElementById("namePopup").classList.add("show");
 }
+
 
 // 🔗 JOIN ROOM
 function joinRoom(){
