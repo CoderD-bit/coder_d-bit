@@ -238,19 +238,27 @@ function joinRoom(){
 // 🚀 START GAME
 function startGame(){
 
-  if(playerSymbol==="X"){
-    playerXName = document.getElementById("nameX").value || "X";
+  // Disable button (prevent double click)
+  document.querySelector(".popup-box button").disabled = true;
 
-    db.ref("rooms/"+roomId).update({
-      playerXName
+  if(playerSymbol==="X"){
+
+    db.ref("rooms/"+roomId+"/playerXName").transaction(current=>{
+      if(current === ""){
+        return document.getElementById("nameX").value || "X";
+      }
+      return; // already set → do nothing
     });
 
   } else if(playerSymbol==="O"){
-    playerOName = document.getElementById("nameO").value || "O";
 
-    db.ref("rooms/"+roomId).update({
-      playerOName
+    db.ref("rooms/"+roomId+"/playerOName").transaction(current=>{
+      if(current === ""){
+        return document.getElementById("nameO").value || "O";
+      }
+      return;
     });
+
   }
 
   document.getElementById("namePopup").classList.remove("show");
