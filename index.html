@@ -212,16 +212,25 @@ function createRoom(){
 
 // 🔗 JOIN ROOM
 function joinRoom(){
-  roomId = document.getElementById("roomId").value;
+  roomId = document.getElementById("roomId").value.trim();
 
   if(!roomId){
     alert("Enter Room ID");
     return;
   }
 
-  playerSymbol="O";
+  // 🔥 CHECK IF ROOM EXISTS
+  db.ref("rooms/"+roomId).once("value", snap => {
 
-  document.getElementById("namePopup").classList.add("show");
+    if(!snap.exists()){
+      alert("Room does not exist!");
+      return;
+    }
+
+    playerSymbol = "O";
+
+    document.getElementById("namePopup").classList.add("show");
+  });
 }
 
 // 🚀 START GAME
@@ -229,10 +238,14 @@ function startGame(){
   playerXName = document.getElementById("nameX").value || "X";
   playerOName = document.getElementById("nameO").value || "O";
 
+  db.ref("rooms/"+roomId).once("value", snap=>{
+  const data = snap.val();
+
   db.ref("rooms/"+roomId).update({
-    playerXName,
-    playerOName
+    playerXName: data.playerXName || playerXName,
+    playerOName: data.playerOName || playerOName
   });
+});
 
   document.getElementById("namePopup").classList.remove("show");
 
@@ -305,8 +318,9 @@ function closePopup(){
   boardState=["","","","","","","","",""];
 
   db.ref("rooms/"+roomId).update({
-    board: boardState,
-    winner: ""
+  board: boardState,
+  winner: "",
+  turn: "X"   // 🔥 reset turn
   });
 }
 
