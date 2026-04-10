@@ -147,6 +147,8 @@ h1 {
   </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+  
 <script>
 // 🔥 Firebase
 const firebaseConfig = {
@@ -266,10 +268,14 @@ function updateUI(){
 }
 
 // 🏆 WIN
+// SECOND ONE ✅
 function showWin(w){
   document.getElementById("popupMessage").textContent =
     (w==="X"?playerXName:playerOName)+" Wins!";
+
   document.getElementById("winPopup").classList.add("show");
+
+  celebrateWin();
 }
 
 // 🔄 RESET
@@ -329,18 +335,8 @@ function celebrateWin() {
     }
   })();
 }
-
-function showWin(w){
-  document.getElementById("popupMessage").textContent =
-    (w==="X"?playerXName:playerOName)+" Wins!";
-
-  document.getElementById("winPopup").classList.add("show");
-
-  // 🎉 ADD THIS LINE
-  celebrateWin();
-}
-  
+ 
 </script>
-<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
 </body>
 </html>
