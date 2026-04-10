@@ -158,6 +158,8 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
+
+  
 // 🎮 Variables
 let roomId = "";
 let playerSymbol = "";
@@ -303,7 +305,42 @@ function init(){
 }
 init();
 
-</script>
+function celebrateWin() {
+  const duration = 2000;
+  const end = Date.now() + duration;
 
+  (function frame() {
+    confetti({
+      particleCount: 5,
+      angle: 60,
+      spread: 55,
+      origin: { x: 0 }
+    });
+
+    confetti({
+      particleCount: 5,
+      angle: 120,
+      spread: 55,
+      origin: { x: 1 }
+    });
+
+    if (Date.now() < end) {
+      requestAnimationFrame(frame);
+    }
+  })();
+}
+
+function showWin(w){
+  document.getElementById("popupMessage").textContent =
+    (w==="X"?playerXName:playerOName)+" Wins!";
+
+  document.getElementById("winPopup").classList.add("show");
+
+  // 🎉 ADD THIS LINE
+  celebrateWin();
+}
+  
+</script>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 </body>
 </html>
