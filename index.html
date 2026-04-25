@@ -204,7 +204,7 @@ function createRoom(){
   
 // 🔗 JOIN ROOM
 function joinRoom(){
-  roomId = document.getElementById("roomId").value;
+  roomId = document.getElementById("roomId").value.trim();
 
   if(!roomId){
     alert("Enter Room ID");
