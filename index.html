@@ -292,13 +292,17 @@ function leaveRoom(){
 
     // 🔹 Step 1: mark player as left
     if(playerSymbol === "X"){
-      db.ref("rooms/"+roomId+"/playerX").set(false);
-      db.ref("rooms/"+roomId+"/playerXName").set("");
-    } 
-    else if(playerSymbol === "O"){
-      db.ref("rooms/"+roomId+"/playerO").set(false);
-      db.ref("rooms/"+roomId+"/playerOName").set("");
-    }
+  db.ref("rooms/"+roomId).update({
+    playerX: false,
+    playerXName: ""
+  });
+}
+else if(playerSymbol === "O"){
+  db.ref("rooms/"+roomId).update({
+    playerO: false,
+    playerOName: ""
+  });
+}
 
     // 🔹 Step 2: immediately check room
     db.ref("rooms/"+roomId).once("value", snap => {
