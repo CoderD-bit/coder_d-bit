@@ -1,122 +1,39 @@
 <!DOCTYPE html>
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
-
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>Tic Tac Toe</title>
 
-<link href="https://fonts.googleapis.com/css2?family=Pacifico&display=swap" rel="stylesheet">
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 
 <style>
 body {
-  background: radial-gradient(circle at center, #1e1e1e, #121212);
-  color: white;
-  font-family: 'Segoe UI', sans-serif;
-  display:flex;
-  flex-direction:column;
-  align-items:center;
-  justify-content:center;
-  min-height:100vh;
-  margin:0;
-}
-
-h1 {
-  font-family:'Pacifico';
-  font-size:3rem;
-}
-
-.top-controls {
-  margin:15px 0;
-}
-
-.top-controls input {
-  padding:10px;
-  border-radius:8px;
-  border:none;
-  outline:none;
-  width:160px;
+  background:#121212;
+  color:white;
+  font-family:sans-serif;
   text-align:center;
-}
-
-.top-controls button {
-  padding:10px 15px;
-  border:none;
-  border-radius:8px;
-  cursor:pointer;
-  margin:5px;
-  font-weight:bold;
-  background:#00ff99;
 }
 
 .board {
   display:grid;
   grid-template-columns:repeat(3,100px);
   gap:10px;
+  justify-content:center;
+  margin-top:20px;
 }
 
 .cell {
   width:100px;
   height:100px;
-  background:rgba(255,255,255,0.05);
+  background:#1e1e1e;
   display:flex;
   align-items:center;
   justify-content:center;
-  font-size:2.5rem;
-  cursor:pointer;
-  border-radius:10px;
-}
-
-.cell.X { color:#ffd700; }
-.cell.O { color:#00ff99; }
-
-#status {
-  margin-top:15px;
-}
-
-/* POPUP */
-.popup {
-  position:fixed;
-  top:0;left:0;
-  width:100%;height:100%;
-  background:rgba(0,0,0,0.4);
-  backdrop-filter:blur(10px);
-  display:none;
-  align-items:center;
-  justify-content:center;
-}
-
-.popup.show { display:flex; }
-
-.popup-box {
-  background:rgba(255,255,255,0.05);
-  padding:30px;
-  border-radius:15px;
-  text-align:center;
-}
-
-.popup-box input {
-  padding:10px;
-  margin:10px;
-  border:none;
-  border-radius:5px;
-  text-align:center;
-}
-
-.popup-box button {
-  padding:10px 20px;
-  background:#00ff99;
-  border:none;
-  border-radius:5px;
+  font-size:2rem;
   cursor:pointer;
 }
-
-#leaveBtn {
-  display:none;
-}
-  
 </style>
 </head>
 
@@ -124,340 +41,38 @@ h1 {
 
 <h1>Tic Tac Toe</h1>
 
-<div class="top-controls">
-  <input id="roomId" placeholder="Enter or Create Room ID">
-  <button onclick="createRoom()">Auto Create</button>
-  <button onclick="createCustomRoom()">Create Custom</button>
-  <button onclick="joinRoom()">Join Room</button>
-  <button id="leaveBtn" onclick="leaveRoom()">Leave Room</button>
-</div>
+<input id="roomId" placeholder="Room ID">
+<button onclick="createRoom()">Create</button>
+<button onclick="joinRoom()">Join</button>
+<button onclick="leaveRoom()">Leave</button>
 
-<div id="status">Create or Join Room</div>
+<h3 id="status">Idle</h3>
 
-<div class="board" id="board"></div>
+<div id="board" class="board"></div>
 
-<!-- NAME POPUP -->
-<div class="popup" id="namePopup">
-  <div class="popup-box">
-    <h3>Enter Names</h3>
-    <input id="nameX" placeholder="Player X"><br>
-    <input id="nameO" placeholder="Player O"><br>
-    <button onclick="startGame()">Start Game</button>
-  </div>
-</div>
-
-<!-- WIN POPUP -->
-<div class="popup" id="winPopup">
-  <div class="popup-box">
-    <h2 id="popupMessage"></h2>
-    <button onclick="closePopup()">Next</button>
-  </div>
-</div>
-
-<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
-  
 <script>
 // 🔥 Firebase
-const firebaseConfig = {
-  apiKey: "AIzaSyDdqkaRX5-PvcF3CZ90Zvq8NNOo6zT17SE",
-  authDomain: "tic-tac-toe-0258.firebaseapp.com",
-  databaseURL: "https://tic-tac-toe-0258-default-rtdb.firebaseio.com",
-  projectId: "tic-tac-toe-0258",
-};
-firebase.initializeApp(firebaseConfig);
+firebase.initializeApp({
+  apiKey: "YOUR_KEY",
+  databaseURL: "YOUR_DB_URL"
+});
 const db = firebase.database();
 
-
-  
 // 🎮 Variables
-let roomId = "";
-let playerSymbol = "";
-let boardState = ["","","","","","","","",""];
-let currentPlayer = "X";
-let cells = [];
-
-let playerXName="X";
-let playerOName="O";
-
-// 🏠 CREATE ROOM
-function createRoom(){
-
-  leaveRoom(); // ⭐ ADD THIS LINE
-
-  roomId = Math.random().toString(36).substr(2,5);
-  document.getElementById("roomId").value = roomId;
-  document.getElementById("leaveBtn").style.display = "inline-block";
-  
-  playerSymbol="X";
-
-  db.ref("rooms/"+roomId).set({
-    board: ["","","","","","","","",""],
-    turn: "X",
-    winner: "",
-    playerX: true,
-    playerO: false,
-    playerXName: "",
-    playerOName: ""
-  })
-  .then(() => {
-    alert("Room ID: " + roomId);
-    document.getElementById("namePopup").classList.add("show");
-    document.getElementById("nameO").disabled = true;
-  });
-}
-
-
-function createCustomRoom(){
-
-  let input = document.getElementById("roomId").value.trim();
-
-  if(!input){
-    alert("Enter Room Name");
-    return;
-  }
-
-  // ✅ WAIT for leaveRoom to finish
-  leaveRoom().then(() => {
-
-    roomId = input.toLowerCase();
-    playerSymbol = "X";
-
-    db.ref("rooms/" + roomId).once("value", snap => {
-
-      if(snap.exists() && (snap.val().playerX || snap.val().playerO)){
-        alert("Room already in use ❌");
-        return;
-      }
-
-      db.ref("rooms/" + roomId).set({
-        board: ["","","","","","","","",""],
-        turn: "X",
-        winner: "",
-        playerX: true,
-        playerO: false,
-        playerXName: "",
-        playerOName: ""
-      })
-      .then(() => {
-        alert("Room Created: " + roomId);
-
-        document.getElementById("namePopup").classList.add("show");
-        document.getElementById("nameO").disabled = true;
-        document.getElementById("leaveBtn").style.display = "inline-block";
-      });
-
-    });
-
-  });
-}
-  
-// 🔗 JOIN ROOM
-function joinRoom(){
-  roomId = document.getElementById("roomId").value.trim().toLowerCase();
-
-  if(!roomId){
-    alert("Enter Room ID");
-    return;
-  }
-
-  db.ref("rooms/"+roomId).once("value", snap=>{
-    const data = snap.val();
-
-    if(!data){
-      alert("Room not found");
-      return;
-    }
-
-    // ✅ SHOW BUTTON ONLY IF ROOM EXISTS
-    document.getElementById("leaveBtn").style.display = "inline-block";
-
-    if(!data.playerO){
-      playerSymbol="O";
-
-      db.ref("rooms/"+roomId).update({
-        playerO: true
-      });
-
-      document.getElementById("namePopup").classList.add("show");
-      document.getElementById("nameX").disabled = true;
-
-    } else {
-      alert("Room Full ❌");
-    }
-  });
-}  
-
-function leaveRoom(){
-  document.getElementById("leaveBtn").style.display = "none";
-    
-  if(roomId){
-
-    // 🔹 Step 1: mark player as left
-    if(playerSymbol === "X"){
-      db.ref("rooms/"+roomId+"/playerX").set(false);
-      db.ref("rooms/"+roomId+"/playerXName").set("");
-    } 
-    else if(playerSymbol === "O"){
-      db.ref("rooms/"+roomId+"/playerO").set(false);
-      db.ref("rooms/"+roomId+"/playerOName").set("");
-    }
-
-    // 🔹 Step 2: check after delay → delete if empty
-    setTimeout(() => {
-      db.ref("rooms/"+roomId).once("value", snap => {
-        const data = snap.val();
-
-        if(data && !data.playerX && !data.playerO){
-          db.ref("rooms/"+roomId).remove();
-          console.log("Room deleted (empty)");
-        }
-      });
-    }, 300);
-
-    // 🔹 Step 3: stop listener
-    db.ref("rooms/"+roomId).off();
-  }
-
-  // 🔹 Step 4: reset local variables
-  roomId = "";
-  playerSymbol = "";
-}
-
-// 🚀 START GAME
-function startGame(){
-
-  const btn = document.querySelector(".popup-box button");
-  btn.disabled = true;
-
-  setTimeout(() => {
-    btn.disabled = false;
-  }, 2000); // re-enable after 2 sec
-
-  if(playerSymbol==="X"){
-
-    db.ref("rooms/"+roomId+"/playerXName").transaction(current=>{
-      if(current === ""){
-        return document.getElementById("nameX").value || "X";
-      }
-      return; // already set → do nothing
-    });
-
-  } else if(playerSymbol==="O"){
-
-    db.ref("rooms/"+roomId+"/playerOName").transaction(current=>{
-      if(current === ""){
-        return document.getElementById("nameO").value || "O";
-      }
-      return;
-    });
-
-  }
-
-  document.getElementById("namePopup").classList.remove("show");
-
-  listenGame();
-}
-
-  
-
-// 👂 LISTEN
-function listenGame(){
-  db.ref("rooms/"+roomId).on("value", snap=>{
-    const data = snap.val();
-    if(!data) return;
-
-    boardState = data.board;
-    currentPlayer = data.turn;
-
-    playerXName = data.playerXName;
-    playerOName = data.playerOName;
-
-    if(playerXName){
-  document.getElementById("nameX").disabled = true;
-}
-if(playerOName){
-  document.getElementById("nameO").disabled = true;
-}
-    
-    updateUI();
-
-    if(data.winner){
-      showWin(data.winner);
-    }
-  });
-}
-
-// 🎯 CLICK
-function handleClick(e){
-  const index = cells.indexOf(e.target);
-
-  if(boardState[index] || currentPlayer!==playerSymbol) return;
-
-  boardState[index]=playerSymbol;
-
-  const winner = checkWin(boardState);
-
-  db.ref("rooms/"+roomId).update({
-    board: boardState,
-    turn: playerSymbol==="X"?"O":"X",
-    winner: winner || ""
-  });
-}
-
-// 🎨 UI
-function updateUI(){
-  cells.forEach((c,i)=>{
-    c.textContent = boardState[i];
-    c.className="cell "+boardState[i];
-  });
-
-  // ⏳ WAIT until names are actually entered
-  if(!playerXName || !playerOName){
-    document.getElementById("status").textContent = "Waiting for players to enter names...";
-    return;
-  }
-
-  // 🎯 Show real player names
-  let currentName = currentPlayer === "X" ? playerXName : playerOName;
-
-  document.getElementById("status").textContent = currentName + " Turn";
-}
-
-  
-// 🏆 WIN
-// SECOND ONE ✅
-function showWin(w){
-  document.getElementById("popupMessage").textContent =
-    (w==="X" ? playerXName : playerOName)
-
-  document.getElementById("winPopup").classList.add("show");
-
-  celebrateWin();
-}
-
-// 🔄 RESET
-function closePopup(){
-  document.getElementById("winPopup").classList.remove("show");
-
-  boardState=["","","","","","","","",""];
-
-  db.ref("rooms/"+roomId).update({
-    board: boardState,
-    winner: ""
-  });
-}
-
-// 🧠 CHECK WIN
-function checkWin(b){
-  const c=[[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
-  for(let i of c){
-    if(b[i[0]] && b[i[0]]===b[i[1]] && b[i[1]]===b[i[2]]) return b[i[0]];
-  }
-}
-
-// 🔲 INIT
+let roomId="";
+let playerSymbol="";
+let boardState=["","","","","","","","",""];
+let currentPlayer="X";
+let cells=[];
+
+let playerXName="";
+let playerOName="";
+
+// 🔲 INIT BOARD
 function init(){
   const board=document.getElementById("board");
+  board.innerHTML="";
+  cells=[];
   for(let i=0;i<9;i++){
     const d=document.createElement("div");
     d.className="cell";
@@ -468,31 +83,178 @@ function init(){
 }
 init();
 
-function celebrateWin() {
-  const duration = 2000;
-  const end = Date.now() + duration;
 
-  (function frame() {
-    confetti({
-      particleCount: 5,
-      angle: 60,
-      spread: 55,
-      origin: { x: 0 }
-    });
+// 🏠 CREATE ROOM
+function createRoom(){
+  leaveRoom();
 
-    confetti({
-      particleCount: 5,
-      angle: 120,
-      spread: 55,
-      origin: { x: 1 }
-    });
+  roomId = Math.random().toString(36).substr(2,5);
+  playerSymbol="X";
 
-    if (Date.now() < end) {
-      requestAnimationFrame(frame);
-    }
-  })();
+  db.ref("rooms/"+roomId).set({
+    board:["","","","","","","","",""],
+    turn:"X",
+    playerX:true,
+    playerO:false,
+    playerXName:"",
+    playerOName:"",
+    winner:""
+  });
+
+  localStorage.setItem("roomId", roomId);
+  localStorage.setItem("playerSymbol", playerSymbol);
+
+  document.getElementById("roomId").value = roomId;
+
+  let name = prompt("Enter your name");
+  db.ref("rooms/"+roomId+"/playerXName").set(name || "Player X");
+
+  listenGame();
 }
- 
+
+
+// 🔗 JOIN ROOM
+function joinRoom(){
+  roomId = document.getElementById("roomId").value.trim();
+
+  if(!roomId) return alert("Enter room");
+
+  db.ref("rooms/"+roomId).once("value", snap=>{
+    const data = snap.val();
+
+    if(!data) return alert("Room not found");
+
+    if(!data.playerO){
+      playerSymbol="O";
+      db.ref("rooms/"+roomId+"/playerO").set(true);
+
+      let name = prompt("Enter your name");
+      db.ref("rooms/"+roomId+"/playerOName").set(name || "Player O");
+
+    } else {
+      return alert("Room full");
+    }
+
+    localStorage.setItem("roomId", roomId);
+    localStorage.setItem("playerSymbol", playerSymbol);
+
+    listenGame();
+  });
+}
+
+
+// 👂 LISTEN
+function listenGame(){
+  db.ref("rooms/"+roomId).on("value", snap=>{
+    const data = snap.val();
+    if(!data) return;
+
+    boardState = data.board;
+    currentPlayer = data.turn;
+
+    playerXName = data.playerXName || "";
+    playerOName = data.playerOName || "";
+
+    updateUI();
+
+    if(data.winner){
+      alert((data.winner==="X"?playerXName:playerOName)+" Wins!");
+    }
+  });
+}
+
+
+// 🎯 CLICK
+function handleClick(e){
+  const i = cells.indexOf(e.target);
+
+  if(boardState[i] || currentPlayer!==playerSymbol) return;
+
+  boardState[i]=playerSymbol;
+
+  const winner = checkWin(boardState);
+
+  db.ref("rooms/"+roomId).update({
+    board: boardState,
+    turn: playerSymbol==="X"?"O":"X",
+    winner: winner || ""
+  });
+}
+
+
+// 🎨 UI
+function updateUI(){
+  cells.forEach((c,i)=>{
+    c.textContent = boardState[i];
+  });
+
+  if(!playerXName || !playerOName){
+    document.getElementById("status").textContent="Waiting players...";
+    return;
+  }
+
+  let name = currentPlayer==="X"?playerXName:playerOName;
+  document.getElementById("status").textContent = name + " Turn";
+}
+
+
+// 🚪 LEAVE ROOM
+function leaveRoom(){
+
+  if(!roomId) return;
+
+  if(playerSymbol==="X"){
+    db.ref("rooms/"+roomId+"/playerX").set(false);
+    db.ref("rooms/"+roomId+"/playerXName").set("");
+  } else {
+    db.ref("rooms/"+roomId+"/playerO").set(false);
+    db.ref("rooms/"+roomId+"/playerOName").set("");
+  }
+
+  // 🧹 DELETE IF EMPTY
+  setTimeout(()=>{
+    db.ref("rooms/"+roomId).once("value", snap=>{
+      const d=snap.val();
+      if(d && !d.playerX && !d.playerO){
+        db.ref("rooms/"+roomId).remove();
+      }
+    });
+  },500);
+
+  db.ref("rooms/"+roomId).off();
+
+  localStorage.clear();
+
+  roomId="";
+  playerSymbol="";
+}
+
+
+// 🧠 WIN CHECK
+function checkWin(b){
+  const c=[[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
+  for(let i of c){
+    if(b[i[0]] && b[i[0]]===b[i[1]] && b[i[1]]===b[i[2]])
+      return b[i[0]];
+  }
+}
+
+
+// 🔄 AUTO REJOIN AFTER REFRESH
+window.onload = function(){
+  const savedRoom = localStorage.getItem("roomId");
+  const savedSymbol = localStorage.getItem("playerSymbol");
+
+  if(savedRoom && savedSymbol){
+    roomId = savedRoom;
+    playerSymbol = savedSymbol;
+
+    document.getElementById("roomId").value = roomId;
+
+    listenGame();
+  }
+};
+
 </script>
 
 </body>
