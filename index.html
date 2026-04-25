@@ -227,24 +227,23 @@ function createCustomRoom(){
 
   db.ref("rooms/" + roomId)
   .once("value", { source: "server" }) // ✅ FORCE SERVER DATA
-  .then(snap => {
+ .then(snap => {
 
   if(snap.exists()){
     const data = snap.val();
 
-    // 🧹 CLEAN STALE ROOM (both players gone)
-    if(!data.playerX && !data.playerO){
-      db.ref("rooms/" + roomId).remove();
-    }
+    const fullRoom = data.playerX && data.playerO;
 
-    // ❌ Block only if BOTH players active
-    else if(data.playerX && data.playerO){
+    if(fullRoom){
       alert("Room already in use ❌");
       return;
     }
+
+    // 🧹 if room is stale or partially empty → delete it
+    db.ref("rooms/" + roomId).remove();
   }
 
-  // ✅ CREATE ROOM (allowed cases)
+  // ✅ CREATE NEW CLEAN ROOM
   db.ref("rooms/" + roomId).set({
     board: ["","","","","","","","",""],
     turn: "X",
