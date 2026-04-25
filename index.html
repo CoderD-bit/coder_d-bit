@@ -200,10 +200,13 @@ function createRoom(){
     playerOName: ""
   })
   .then(() => {
-    alert("Room ID: " + roomId);
-    document.getElementById("namePopup").classList.add("show");
-    document.getElementById("nameO").disabled = true;
-  });
+  alert("Room ID: " + roomId);
+
+  setupPresence(); // ✅ ADD THIS
+
+  document.getElementById("namePopup").classList.add("show");
+  document.getElementById("nameO").disabled = true;
+});
 }
 
 
@@ -239,12 +242,14 @@ function createCustomRoom(){
       playerOName: ""
     })
     .then(() => {
-      alert("Room Created: " + roomId);
+  alert("Room Created: " + roomId);
 
-      document.getElementById("namePopup").classList.add("show");
-      document.getElementById("nameO").disabled = true;
-      document.getElementById("leaveBtn").style.display = "inline-block";
-    });
+  setupPresence(); // ✅ ADD THIS
+
+  document.getElementById("namePopup").classList.add("show");
+  document.getElementById("nameO").disabled = true;
+  document.getElementById("leaveBtn").style.display = "inline-block";
+});
 
   });
 }
@@ -270,16 +275,17 @@ function joinRoom(){
     document.getElementById("leaveBtn").style.display = "inline-block";
 
     if(!data.playerO){
-      playerSymbol="O";
+  playerSymbol="O";
 
-      db.ref("rooms/"+roomId).update({
-        playerO: true
-      });
+  db.ref("rooms/"+roomId).update({
+    playerO: true
+  });
 
-      document.getElementById("namePopup").classList.add("show");
-      document.getElementById("nameX").disabled = true;
+  setupPresence(); // ✅ ADD THIS
 
-    } else {
+  document.getElementById("namePopup").classList.add("show");
+  document.getElementById("nameX").disabled = true;
+} else {
       alert("Room Full ❌");
     }
   });
@@ -329,6 +335,30 @@ else if(playerSymbol === "O"){
   document.getElementById("status").textContent = "Create or Join Room";
 }
 
+
+function setupPresence(){
+  if(!roomId || !playerSymbol) return;
+
+  const playerPath = "rooms/"+roomId+"/" + (playerSymbol === "X" ? "playerX" : "playerO");
+  const namePath   = "rooms/"+roomId+"/" + (playerSymbol === "X" ? "playerXName" : "playerOName");
+
+  const playerRef = db.ref(playerPath);
+  const nameRef   = db.ref(namePath);
+
+  // mark online
+  playerRef.set(true);
+
+  // 🔥 AUTO REMOVE when tab closes / internet lost
+  playerRef.onDisconnect().set(false);
+  nameRef.onDisconnect().set("");
+
+  // 🔥 DELETE ROOM if both offline
+  db.ref("rooms/"+roomId).onDisconnect().update({
+    playerX: false,
+    playerO: false
+  });
+}
+
   
 
 // 🚀 START GAME
@@ -372,7 +402,19 @@ function startGame(){
 function listenGame(){
   db.ref("rooms/"+roomId).on("value", snap=>{
     const data = snap.val();
-    if(!data) return;
+
+    // 🚨 ROOM DELETED
+    if(!data){
+      alert("Room closed!");
+      leaveRoom();
+      return;
+    }
+
+    // 🚨 AUTO DELETE if both players left
+    if(!data.playerX && !data.playerO){
+      db.ref("rooms/"+roomId).remove();
+      return;
+    }
 
     boardState = data.board;
     currentPlayer = data.turn;
@@ -380,13 +422,6 @@ function listenGame(){
     playerXName = data.playerXName || "";
     playerOName = data.playerOName || "";
 
-    if(playerXName){
-  document.getElementById("nameX").disabled = true;
-}
-if(playerOName){
-  document.getElementById("nameO").disabled = true;
-}
-    
     updateUI();
 
     if(data.winner){
@@ -395,6 +430,7 @@ if(playerOName){
   });
 }
 
+  
 // 🎯 CLICK
 function handleClick(e){
   const index = cells.indexOf(e.target);
