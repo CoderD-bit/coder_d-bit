@@ -302,26 +302,32 @@ function leaveRoom(){
       db.ref("rooms/"+roomId+"/playerOName").set("");
     }
 
-    // 🔹 Step 2: check after delay → delete if empty
-    setTimeout(() => {
-      db.ref("rooms/"+roomId).once("value", snap => {
-        const data = snap.val();
+    // 🔹 Step 2: immediately check room
+    db.ref("rooms/"+roomId).once("value", snap => {
+      const data = snap.val();
 
-        if(data && !data.playerX && !data.playerO){
-          db.ref("rooms/"+roomId).remove();
-          console.log("Room deleted (empty)");
-        }
-      });
-    }, 300);
+      // ✅ delete only if BOTH players left
+      if(data && !data.playerX && !data.playerO){
+        db.ref("rooms/"+roomId).remove();
+        console.log("Room deleted (empty)");
+      }
+    });
 
-    // 🔹 Step 3: stop listener
+    // 🔹 stop listener
     db.ref("rooms/"+roomId).off();
   }
 
-  // 🔹 Step 4: reset local variables
+  // 🔹 clear session
+  localStorage.removeItem("roomId");
+  localStorage.removeItem("playerSymbol");
+
   roomId = "";
   playerSymbol = "";
+
+  document.getElementById("status").textContent = "Create or Join Room";
 }
+
+  
 
 // 🚀 START GAME
 function startGame(){
