@@ -419,30 +419,40 @@ function updateUI(){
     c.className="cell "+boardState[i];
   });
 
-  // ⏳ WAIT until names are actually entered
+  // ✅ FIX: Only show waiting if players NOT joined
   if(!playerXName || !playerOName){
-    document.getElementById("status").textContent = "Waiting for players to enter names...";
+    document.getElementById("status").textContent = "Waiting for players...";
     return;
   }
 
-  // 🎯 Show real player names
+  // ✅ ALWAYS show turn once both names exist
   let currentName = currentPlayer === "X" ? playerXName : playerOName;
 
   document.getElementById("status").textContent = currentName + " Turn";
 }
-
   
 // 🏆 WIN
 // SECOND ONE ✅
 function showWin(w){
+
+  let winnerName = w === "X" ? playerXName : playerOName;
+
+  // ✅ fallback safety
+  if(!winnerName){
+    winnerName = w;
+  }
+
   document.getElementById("popupMessage").textContent =
-    (w==="X" ? playerXName : playerOName)
+    winnerName + " Wins!";
 
   document.getElementById("winPopup").classList.add("show");
 
   celebrateWin();
 }
 
+
+
+  
 // 🔄 RESET
 function closePopup(){
   document.getElementById("winPopup").classList.remove("show");
