@@ -210,6 +210,9 @@ function createRoom(){
 }
 
 
+
+
+  
 function createCustomRoom(){
 
   let input = document.getElementById("roomId").value.trim();
@@ -219,53 +222,59 @@ function createCustomRoom(){
     return;
   }
 
-  // ✅ just call it (no .then)
   leaveRoom();
 
   roomId = input.toLowerCase();
   playerSymbol = "X";
 
   db.ref("rooms/" + roomId)
-  .once("value", { source: "server" }) // ✅ FORCE SERVER DATA
+  .once("value")   // ❌ removed invalid {source:"server"}
   .then(snap => {
 
-  if(snap.exists()){
-    const data = snap.val();
+    if(snap.exists()){
+      const data = snap.val();
 
-    // 🧹 CLEAN STALE ROOM (both players gone)
-    if(!data.playerX && !data.playerO){
-      db.ref("rooms/" + roomId).remove();
+      // clean stale room
+      if(!data.playerX && !data.playerO){
+        db.ref("rooms/" + roomId).remove();
+      }
+
+      // block only if both active
+      else if(data.playerX && data.playerO){
+        alert("Room already in use ❌");
+        return;
+      }
     }
 
-    // ❌ Block only if BOTH players active
-    else if(data.playerX && data.playerO){
-      alert("Room already in use ❌");
-      return;
-    }
-  }
+    // create room
+    db.ref("rooms/" + roomId).set({
+      board: ["","","","","","","","",""],
+      turn: "X",
+      winner: "",
+      playerX: true,
+      playerO: false,
+      playerXName: "",
+      playerOName: ""
+    })
+    .then(() => {
+      alert("Room Created: " + roomId);
 
-  // ✅ CREATE ROOM (allowed cases)
-  db.ref("rooms/" + roomId).set({
-    board: ["","","","","","","","",""],
-    turn: "X",
-    winner: "",
-    playerX: true,
-    playerO: false,
-    playerXName: "",
-    playerOName: ""
+      setupPresence();
+
+      document.getElementById("namePopup").classList.add("show");
+      document.getElementById("nameO").disabled = true;
+      document.getElementById("leaveBtn").style.display = "inline-block";
+    });
+
   })
-  .then(() => {
-    alert("Room Created: " + roomId);
-
-    setupPresence(); // keep this
-
-    document.getElementById("namePopup").classList.add("show");
-    document.getElementById("nameO").disabled = true;
-    document.getElementById("leaveBtn").style.display = "inline-block";
+  .catch(err => {
+    console.error("Error creating room:", err);
   });
-
-});
 }
+
+
+
+  
   
 // 🔗 JOIN ROOM
 function joinRoom(){
