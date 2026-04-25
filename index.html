@@ -288,19 +288,20 @@ function joinRoom(){
     document.getElementById("leaveBtn").style.display = "inline-block";
 
     if(!data.playerO){
-  playerSymbol="O";
+  playerSymbol = "O";
+
+  const name = prompt("Enter your name for O") || "O";
 
   db.ref("rooms/"+roomId).update({
-    playerO: true
+    playerO: true,
+    playerOName: name
   });
 
-  setupPresence(); // ✅ ADD THIS
+  setupPresence();
 
   document.getElementById("namePopup").classList.add("show");
   document.getElementById("nameX").disabled = true;
-} else {
-      alert("Room Full ❌");
-    }
+}
   });
 }  
 
@@ -377,38 +378,26 @@ function setupPresence(){
 // 🚀 START GAME
 function startGame(){
 
-  const btn = document.querySelector(".popup-box button");
-  btn.disabled = true;
+  let name = "";
 
-  setTimeout(() => {
-    btn.disabled = false;
-  }, 2000); // re-enable after 2 sec
+  if(playerSymbol === "X"){
+    name = document.getElementById("nameX").value.trim() || "X";
 
-  if(playerSymbol==="X"){
-
-    db.ref("rooms/"+roomId+"/playerXName").transaction(current=>{
-      if(current === ""){
-        return document.getElementById("nameX").value || "X";
-      }
-      return; // already set → do nothing
+    db.ref("rooms/"+roomId).update({
+      playerXName: name
     });
 
-  } else if(playerSymbol==="O"){
+  } else if(playerSymbol === "O"){
+    name = document.getElementById("nameO").value.trim() || "O";
 
-    db.ref("rooms/"+roomId+"/playerOName").transaction(current=>{
-      if(current === ""){
-        return document.getElementById("nameO").value || "O";
-      }
-      return;
+    db.ref("rooms/"+roomId).update({
+      playerOName: name
     });
-
   }
 
   document.getElementById("namePopup").classList.remove("show");
-
   listenGame();
 }
-
   
 
 // 👂 LISTEN
@@ -435,7 +424,7 @@ function listenGame(){
     playerXName = data.playerXName || "";
     playerOName = data.playerOName || "";
 
-    updateUI();
+    updateUI(data);
 
     if(data.winner){
       showWin(data.winner);
@@ -462,23 +451,30 @@ function handleClick(e){
 }
 
 // 🎨 UI
-function updateUI(){
+function updateUI(data){
   cells.forEach((c,i)=>{
     c.textContent = boardState[i];
     c.className="cell "+boardState[i];
   });
 
-  // ✅ FIX: Only show waiting if players NOT joined
-  if(!playerXName || !playerOName){
-    document.getElementById("status").textContent = "Waiting for players...";
-    return;
-  }
+  // ✅ check players instead of names
+  db.ref("rooms/"+roomId).once("value", snap=>{
+    const data = snap.val();
+    if(!data) return;
 
-  // ✅ ALWAYS show turn once both names exist
-  let currentName = currentPlayer === "X" ? playerXName : playerOName;
+    if(!data.playerX || !data.playerO){
+      document.getElementById("status").textContent = "Waiting for players...";
+      return;
+    }
 
-  document.getElementById("status").textContent = currentName + " Turn";
+    let currentName = currentPlayer === "X" ? playerXName : playerOName;
+    document.getElementById("status").textContent = currentName + " Turn";
+  });
 }
+
+
+
+  
   
 // 🏆 WIN
 // SECOND ONE ✅
