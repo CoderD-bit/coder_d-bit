@@ -112,6 +112,11 @@ h1 {
   border-radius:5px;
   cursor:pointer;
 }
+
+#leaveBtn {
+  display:none;
+}
+  
 </style>
 </head>
 
@@ -124,7 +129,7 @@ h1 {
   <button onclick="createRoom()">Auto Create</button>
   <button onclick="createCustomRoom()">Create Custom</button>
   <button onclick="joinRoom()">Join Room</button>
-  <button onclick="leaveRoom()">Leave Room</button>
+  <button id="leaveBtn" onclick="leaveRoom()">Leave Room</button>
 </div>
 
 <div id="status">Create or Join Room</div>
@@ -181,7 +186,8 @@ function createRoom(){
 
   roomId = Math.random().toString(36).substr(2,5);
   document.getElementById("roomId").value = roomId;
-
+  document.getElementById("leaveBtn").style.display = "inline-block";
+  
   playerSymbol="X";
 
   db.ref("rooms/"+roomId).set({
@@ -206,7 +212,8 @@ function createCustomRoom(){
   leaveRoom(); // ⭐ ADD THIS LINE
 
   let input = document.getElementById("roomId").value.trim();
-
+  document.getElementById("leaveBtn").style.display = "inline-block";
+  
   if(!input){
     alert("Enter Room Name");
     return;
@@ -242,7 +249,8 @@ function createCustomRoom(){
 // 🔗 JOIN ROOM
 function joinRoom(){
   roomId = document.getElementById("roomId").value.trim().toLowerCase();
-
+  document.getElementById("leaveBtn").style.display = "inline-block";
+  
   if(!roomId){
     alert("Enter Room ID");
     return;
@@ -275,6 +283,8 @@ function joinRoom(){
 }
 
   function leaveRoom(){
+  document.getElementById("leaveBtn").style.display = "none";
+    
   if(roomId){
     db.ref("rooms/"+roomId).off(); // stop listening old room
   }
