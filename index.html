@@ -212,8 +212,7 @@ function createCustomRoom(){
   leaveRoom(); // ⭐ ADD THIS LINE
 
   let input = document.getElementById("roomId").value.trim();
-  document.getElementById("leaveBtn").style.display = "inline-block";
-  
+    
   if(!input){
     alert("Enter Room Name");
     return;
@@ -241,6 +240,7 @@ function createCustomRoom(){
       alert("Room Created: " + roomId);
       document.getElementById("namePopup").classList.add("show");
       document.getElementById("nameO").disabled = true;
+      document.getElementById("leaveBtn").style.display = "inline-block";
     });
   });
 }
@@ -249,8 +249,7 @@ function createCustomRoom(){
 // 🔗 JOIN ROOM
 function joinRoom(){
   roomId = document.getElementById("roomId").value.trim().toLowerCase();
-  document.getElementById("leaveBtn").style.display = "inline-block";
-  
+
   if(!roomId){
     alert("Enter Room ID");
     return;
@@ -264,6 +263,9 @@ function joinRoom(){
       return;
     }
 
+    // ✅ SHOW BUTTON ONLY IF ROOM EXISTS
+    document.getElementById("leaveBtn").style.display = "inline-block";
+
     if(!data.playerO){
       playerSymbol="O";
 
@@ -272,21 +274,19 @@ function joinRoom(){
       });
 
       document.getElementById("namePopup").classList.add("show");
-
-      // Disable X input
       document.getElementById("nameX").disabled = true;
 
     } else {
       alert("Room Full ❌");
     }
   });
-}
+}  
 
-  function leaveRoom(){
+function leaveRoom(){
   document.getElementById("leaveBtn").style.display = "none";
     
   if(roomId){
-    db.ref("rooms/"+roomId).off(); // stop listening old room
+    db.ref("rooms/"+roomId).off();
   }
 
   // reset game
@@ -295,6 +295,16 @@ function joinRoom(){
   boardState = ["","","","","","","","",""];
   currentPlayer = "X";
 
+  // ✅ ADD THIS (important)
+  playerXName = "X";
+  playerOName = "O";
+
+  document.getElementById("nameX").value = "";
+  document.getElementById("nameO").value = "";
+
+  document.getElementById("nameX").disabled = false;
+  document.getElementById("nameO").disabled = false;
+
   // clear UI
   document.getElementById("board").innerHTML = "";
   cells = [];
@@ -302,7 +312,6 @@ function joinRoom(){
 
   document.getElementById("status").textContent = "Create or Join Room";
 }
-
 
 // 🚀 START GAME
 function startGame(){
