@@ -290,11 +290,10 @@ function leaveRoom(){
     
   if(roomId){
 
-    // ✅ DELETE ROOM if you are creator
+    // ✅ Instead of deleting room
     if(playerSymbol === "X"){
-      db.ref("rooms/"+roomId).remove();
-    } else {
-      // only remove player O
+      db.ref("rooms/"+roomId+"/playerX").set(false);
+    } else if(playerSymbol === "O"){
       db.ref("rooms/"+roomId+"/playerO").set(false);
     }
 
@@ -321,7 +320,6 @@ function leaveRoom(){
   init();
 
   document.getElementById("status").textContent = "Create or Join Room";
-
 }
 
 
