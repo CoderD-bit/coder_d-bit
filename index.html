@@ -187,16 +187,20 @@ function createRoom(){
     playerO: false,
     playerXName: "",
     playerOName: ""
+  })
+  .then(() => {
+    // ✅ ONLY after data saved
+    alert("Room ID: " + roomId);
+
+    document.getElementById("namePopup").classList.add("show");
+
+    document.getElementById("nameO").disabled = true;
+  })
+  .catch(err => {
+    console.error(err);
+    alert("Error creating room");
   });
-
-  alert("Room ID: "+roomId);
-
-  document.getElementById("namePopup").classList.add("show");
-
-  // Disable O input
-  document.getElementById("nameO").disabled = true;
 }
-
   
 // 🔗 JOIN ROOM
 function joinRoom(){
