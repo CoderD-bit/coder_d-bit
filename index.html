@@ -377,8 +377,8 @@ function listenGame(){
     boardState = data.board;
     currentPlayer = data.turn;
 
-    playerXName = data.playerXName;
-    playerOName = data.playerOName;
+    playerXName = data.playerXName || "";
+    playerOName = data.playerOName || "";
 
     if(playerXName){
   document.getElementById("nameX").disabled = true;
