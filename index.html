@@ -216,34 +216,36 @@ function createCustomRoom(){
     return;
   }
 
-  leaveRoom(); // leave old room AFTER taking input
+  // ✅ WAIT for leaveRoom to finish
+  leaveRoom().then(() => {
 
-  roomId = input.toLowerCase();
-  playerSymbol = "X";
+    roomId = input.toLowerCase();
+    playerSymbol = "X";
 
-  db.ref("rooms/" + roomId).once("value", snap => {
+    db.ref("rooms/" + roomId).once("value", snap => {
 
-    // ✅ NEW CONDITION HERE
-    if(snap.exists() && snap.val().playerX){
-      alert("Room already exists ❌");
-      return;
-    }
+      if(snap.exists() && snap.val().playerX){
+        alert("Room already exists ❌");
+        return;
+      }
 
-    db.ref("rooms/" + roomId).set({
-      board: ["","","","","","","","",""],
-      turn: "X",
-      winner: "",
-      playerX: true,
-      playerO: false,
-      playerXName: "",
-      playerOName: ""
-    })
-    .then(() => {
-      alert("Room Created: " + roomId);
+      db.ref("rooms/" + roomId).set({
+        board: ["","","","","","","","",""],
+        turn: "X",
+        winner: "",
+        playerX: true,
+        playerO: false,
+        playerXName: "",
+        playerOName: ""
+      })
+      .then(() => {
+        alert("Room Created: " + roomId);
 
-      document.getElementById("namePopup").classList.add("show");
-      document.getElementById("nameO").disabled = true;
-      document.getElementById("leaveBtn").style.display = "inline-block";
+        document.getElementById("namePopup").classList.add("show");
+        document.getElementById("nameO").disabled = true;
+        document.getElementById("leaveBtn").style.display = "inline-block";
+      });
+
     });
 
   });
@@ -290,40 +292,18 @@ function leaveRoom(){
     
   if(roomId){
 
-    // ✅ If creator (X) → delete full room
     if(playerSymbol === "X"){
-      db.ref("rooms/"+roomId).remove();
+      return db.ref("rooms/"+roomId).remove(); // ✅ return promise
     } 
-    // ✅ If O → just leave
     else if(playerSymbol === "O"){
-      db.ref("rooms/"+roomId+"/playerO").set(false);
+      return db.ref("rooms/"+roomId+"/playerO").set(false);
     }
 
     db.ref("rooms/"+roomId).off();
   }
 
-  // reset UI
-  roomId = "";
-  playerSymbol = "";
-  boardState = ["","","","","","","","",""];
-  currentPlayer = "X";
-
-  playerXName = "X";
-  playerOName = "O";
-
-  document.getElementById("nameX").value = "";
-  document.getElementById("nameO").value = "";
-
-  document.getElementById("nameX").disabled = false;
-  document.getElementById("nameO").disabled = false;
-
-  document.getElementById("board").innerHTML = "";
-  cells = [];
-  init();
-
-  document.getElementById("status").textContent = "Create or Join Room";
+  return Promise.resolve(); // ✅ important
 }
-
 
 // 🚀 START GAME
 function startGame(){
