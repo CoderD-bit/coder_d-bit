@@ -1,3 +1,9 @@
+players started the game and its still says WAITING FOR PLAYERS
+
+
+code:
+
+
 <!DOCTYPE html>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
@@ -288,20 +294,19 @@ function joinRoom(){
     document.getElementById("leaveBtn").style.display = "inline-block";
 
     if(!data.playerO){
-  playerSymbol = "O";
-
-  const name = prompt("Enter your name for O") || "O";
+  playerSymbol="O";
 
   db.ref("rooms/"+roomId).update({
-    playerO: true,
-    playerOName: name
+    playerO: true
   });
 
-  setupPresence();
+  setupPresence(); // ✅ ADD THIS
 
   document.getElementById("namePopup").classList.add("show");
   document.getElementById("nameX").disabled = true;
-}
+} else {
+      alert("Room Full ❌");
+    }
   });
 }  
 
@@ -378,26 +383,38 @@ function setupPresence(){
 // 🚀 START GAME
 function startGame(){
 
-  let name = "";
+  const btn = document.querySelector(".popup-box button");
+  btn.disabled = true;
 
-  if(playerSymbol === "X"){
-    name = document.getElementById("nameX").value.trim() || "X";
+  setTimeout(() => {
+    btn.disabled = false;
+  }, 2000); // re-enable after 2 sec
 
-    db.ref("rooms/"+roomId).update({
-      playerXName: name
+  if(playerSymbol==="X"){
+
+    db.ref("rooms/"+roomId+"/playerXName").transaction(current=>{
+      if(current === ""){
+        return document.getElementById("nameX").value || "X";
+      }
+      return; // already set → do nothing
     });
 
-  } else if(playerSymbol === "O"){
-    name = document.getElementById("nameO").value.trim() || "O";
+  } else if(playerSymbol==="O"){
 
-    db.ref("rooms/"+roomId).update({
-      playerOName: name
+    db.ref("rooms/"+roomId+"/playerOName").transaction(current=>{
+      if(current === ""){
+        return document.getElementById("nameO").value || "O";
+      }
+      return;
     });
+
   }
 
   document.getElementById("namePopup").classList.remove("show");
+
   listenGame();
 }
+
   
 
 // 👂 LISTEN
@@ -424,7 +441,7 @@ function listenGame(){
     playerXName = data.playerXName || "";
     playerOName = data.playerOName || "";
 
-    updateUI(data);
+    updateUI();
 
     if(data.winner){
       showWin(data.winner);
@@ -451,30 +468,23 @@ function handleClick(e){
 }
 
 // 🎨 UI
-function updateUI(data){
+function updateUI(){
   cells.forEach((c,i)=>{
     c.textContent = boardState[i];
     c.className="cell "+boardState[i];
   });
 
-  // ✅ check players instead of names
-  db.ref("rooms/"+roomId).once("value", snap=>{
-    const data = snap.val();
-    if(!data) return;
+  // ✅ FIX: Only show waiting if players NOT joined
+  if(!playerXName || !playerOName){
+    document.getElementById("status").textContent = "Waiting for players...";
+    return;
+  }
 
-    if(!data.playerX || !data.playerO){
-      document.getElementById("status").textContent = "Waiting for players...";
-      return;
-    }
+  // ✅ ALWAYS show turn once both names exist
+  let currentName = currentPlayer === "X" ? playerXName : playerOName;
 
-    let currentName = currentPlayer === "X" ? playerXName : playerOName;
-    document.getElementById("status").textContent = currentName + " Turn";
-  });
+  document.getElementById("status").textContent = currentName + " Turn";
 }
-
-
-
-  
   
 // 🏆 WIN
 // SECOND ONE ✅
