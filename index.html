@@ -382,25 +382,19 @@ else if(playerSymbol === "O"){
 function setupPresence(){
   if(!roomId || !playerSymbol) return;
 
-  const playerPath = "rooms/"+roomId+"/" + (playerSymbol === "X" ? "playerX" : "playerO");
-  const namePath   = "rooms/"+roomId+"/" + (playerSymbol === "X" ? "playerXName" : "playerOName");
+  const isX = playerSymbol === "X";
 
-  const playerRef = db.ref(playerPath);
-  const nameRef   = db.ref(namePath);
+  const playerRef = db.ref("rooms/"+roomId+"/"+(isX ? "playerX" : "playerO"));
+  const nameRef   = db.ref("rooms/"+roomId+"/"+(isX ? "playerXName" : "playerOName"));
 
   // mark online
   playerRef.set(true);
 
-  // 🔥 AUTO REMOVE when tab closes / internet lost
+  // ✅ auto cleanup ONLY this player
   playerRef.onDisconnect().set(false);
   nameRef.onDisconnect().set("");
-
-  // 🔥 DELETE ROOM if both offline
-  db.ref("rooms/"+roomId).onDisconnect().update({
-    playerX: false,
-    playerO: false
-  });
 }
+  
 
 
 
@@ -506,27 +500,18 @@ function updateUI(){
     c.className="cell "+boardState[i];
   });
 
-  // ✅ FIX: Only show waiting if players NOT joined
- db.ref("rooms/"+roomId).once("value").then(snap=>{
-  const data = snap.val();
-
-  if(!data.playerX || !data.playerO){
+  // ✅ show waiting until BOTH players joined
+  if(!playerXName || !playerOName){
     document.getElementById("status").textContent = "Waiting for players...";
     return;
   }
 
+  // ✅ show turn
   let currentName = currentPlayer === "X" ? playerXName : playerOName;
-  document.getElementById("status").textContent = currentName + " Turn";
-});
-    document.getElementById("status").textContent = "Waiting for players...";
-    return;
-  }
-
-  // ✅ ALWAYS show turn once both names exist
-  let currentName = currentPlayer === "X" ? playerXName : playerOName;
-
   document.getElementById("status").textContent = currentName + " Turn";
 }
+
+  
 
 
 
