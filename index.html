@@ -224,8 +224,8 @@ function createCustomRoom(){
 
     db.ref("rooms/" + roomId).once("value", snap => {
 
-      if(snap.exists() && snap.val().playerX){
-        alert("Room already exists ❌");
+      if(snap.exists() && (snap.val().playerX || snap.val().playerO)){
+        alert("Room already in use ❌");
         return;
       }
 
@@ -292,17 +292,33 @@ function leaveRoom(){
     
   if(roomId){
 
+    // 👇 First mark player as left
     if(playerSymbol === "X"){
-      return db.ref("rooms/"+roomId).remove(); // ✅ return promise
+      db.ref("rooms/"+roomId+"/playerX").set(false);
+      db.ref("rooms/"+roomId+"/playerXName").set("");
     } 
     else if(playerSymbol === "O"){
-      return db.ref("rooms/"+roomId+"/playerO").set(false);
+      db.ref("rooms/"+roomId+"/playerO").set(false);
+      db.ref("rooms/"+roomId+"/playerOName").set("");
     }
+
+    // 👇 Then check if room is empty
+    db.ref("rooms/"+roomId).once("value", snap => {
+      const data = snap.val();
+
+      if(data && !data.playerX && !data.playerO){
+        // 🚀 DELETE ROOM if no players
+        db.ref("rooms/"+roomId).remove();
+        console.log("Room deleted (empty)");
+      }
+    });
 
     db.ref("rooms/"+roomId).off();
   }
 
-  return Promise.resolve(); // ✅ important
+  // reset local variables
+  roomId = "";
+  playerSymbol = "";
 }
 
 // 🚀 START GAME
