@@ -227,31 +227,42 @@ function createCustomRoom(){
 
   db.ref("rooms/" + roomId).once("value", snap => {
 
-    if(snap.exists() && (snap.val().playerX || snap.val().playerO)){
+  if(snap.exists()){
+    const data = snap.val();
+
+    // 🧹 CLEAN STALE ROOM (both players gone)
+    if(!data.playerX && !data.playerO){
+      db.ref("rooms/" + roomId).remove();
+    }
+
+    // ❌ Block only if BOTH players active
+    else if(data.playerX && data.playerO){
       alert("Room already in use ❌");
       return;
     }
+  }
 
-    db.ref("rooms/" + roomId).set({
-      board: ["","","","","","","","",""],
-      turn: "X",
-      winner: "",
-      playerX: true,
-      playerO: false,
-      playerXName: "",
-      playerOName: ""
-    })
-    .then(() => {
-  alert("Room Created: " + roomId);
+  // ✅ CREATE ROOM (allowed cases)
+  db.ref("rooms/" + roomId).set({
+    board: ["","","","","","","","",""],
+    turn: "X",
+    winner: "",
+    playerX: true,
+    playerO: false,
+    playerXName: "",
+    playerOName: ""
+  })
+  .then(() => {
+    alert("Room Created: " + roomId);
 
-  setupPresence(); // ✅ ADD THIS
+    setupPresence(); // keep this
 
-  document.getElementById("namePopup").classList.add("show");
-  document.getElementById("nameO").disabled = true;
-  document.getElementById("leaveBtn").style.display = "inline-block";
-});
-
+    document.getElementById("namePopup").classList.add("show");
+    document.getElementById("nameO").disabled = true;
+    document.getElementById("leaveBtn").style.display = "inline-block";
   });
+
+});
 }
   
 // 🔗 JOIN ROOM
