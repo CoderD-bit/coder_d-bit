@@ -413,6 +413,10 @@ function startGame(){
 
 // 👂 LISTEN
 function listenGame(){
+  let dataReady = false;
+
+  dataReady = data.playerX && data.playerO;
+  
   db.ref("rooms/"+roomId).on("value", snap=>{
     const data = snap.val();
 
@@ -435,13 +439,19 @@ function listenGame(){
     playerXName = data.playerXName || "";
     playerOName = data.playerOName || "";
 
-    updateUI();
+    const dataReady = data.playerX && data.playerO;
+
+    updateUI(dataReady);
 
     if(data.winner){
       showWin(data.winner);
     }
   });
 }
+
+
+
+  
 
   
 // 🎯 CLICK
@@ -461,24 +471,34 @@ function handleClick(e){
   });
 }
 
+
+
+
+
+  
+
 // 🎨 UI
-function updateUI(){
+function updateUI(dataReady){
   cells.forEach((c,i)=>{
     c.textContent = boardState[i];
     c.className="cell "+boardState[i];
   });
 
   // ✅ FIX: Only show waiting if players NOT joined
-  if(!playerXName || !playerOName){
-    document.getElementById("status").textContent = "Waiting for players...";
-    return;
-  }
+  if(!dataReady){
+  document.getElementById("status").textContent = "Waiting for players...";
+  return;
+}
 
   // ✅ ALWAYS show turn once both names exist
   let currentName = currentPlayer === "X" ? playerXName : playerOName;
 
   document.getElementById("status").textContent = currentName + " Turn";
 }
+
+
+
+
   
 // 🏆 WIN
 // SECOND ONE ✅
