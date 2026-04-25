@@ -212,6 +212,9 @@ function createRoom(){
 }
 
 
+
+  
+
 function createCustomRoom(){
 
   let input = document.getElementById("roomId").value.trim();
@@ -227,7 +230,9 @@ function createCustomRoom(){
   roomId = input.toLowerCase();
   playerSymbol = "X";
 
-  db.ref("rooms/" + roomId).once("value", snap => {
+  db.ref("rooms/" + roomId)
+  .once("value", { source: "server" }) // ✅ FORCE SERVER DATA
+  .then(snap => {
 
   if(snap.exists()){
     const data = snap.val();
@@ -239,10 +244,27 @@ function createCustomRoom(){
 
     // ❌ Block only if BOTH players active
     else if(data.playerX && data.playerO){
-      alert("Room already in use ❌");
-      return;
-    }
-  }
+
+  // 🧠 DOUBLE CHECK (give Firebase time)
+  setTimeout(() => {
+    db.ref("rooms/" + roomId)
+      .once("value", { source: "server" })
+      .then(newSnap => {
+        const fresh = newSnap.val();
+
+        // ✅ if still active → block
+        if(fresh.playerX && fresh.playerO){
+          alert("Room already in use ❌");
+        } else {
+          // ✅ otherwise recreate room
+          db.ref("rooms/" + roomId).remove();
+          createCustomRoom(); // retry
+        }
+      });
+  }, 1500); // wait 1.5 sec
+
+  return;
+}
 
   // ✅ CREATE ROOM (allowed cases)
   db.ref("rooms/" + roomId).set({
@@ -266,6 +288,10 @@ function createCustomRoom(){
 
 });
 }
+
+
+
+
   
 // 🔗 JOIN ROOM
 function joinRoom(){
@@ -304,6 +330,9 @@ function joinRoom(){
   });
 }  
 
+
+
+  
 function leaveRoom(){
   document.getElementById("leaveBtn").style.display = "none";
     
@@ -349,6 +378,9 @@ else if(playerSymbol === "O"){
 }
 
 
+
+  
+  
 function setupPresence(){
   if(!roomId || !playerSymbol) return;
 
@@ -371,6 +403,8 @@ function setupPresence(){
     playerO: false
   });
 }
+
+
 
   
 
@@ -408,6 +442,7 @@ function startGame(){
 
   listenGame();
 }
+  
 
   
 
@@ -444,6 +479,8 @@ function listenGame(){
 }
 
   
+
+  
 // 🎯 CLICK
 function handleClick(e){
   const index = cells.indexOf(e.target);
@@ -461,6 +498,9 @@ function handleClick(e){
   });
 }
 
+
+  
+
 // 🎨 UI
 function updateUI(){
   cells.forEach((c,i)=>{
@@ -469,7 +509,17 @@ function updateUI(){
   });
 
   // ✅ FIX: Only show waiting if players NOT joined
-  if(!playerXName || !playerOName){
+ db.ref("rooms/"+roomId).once("value").then(snap=>{
+  const data = snap.val();
+
+  if(!data.playerX || !data.playerO){
+    document.getElementById("status").textContent = "Waiting for players...";
+    return;
+  }
+
+  let currentName = currentPlayer === "X" ? playerXName : playerOName;
+  document.getElementById("status").textContent = currentName + " Turn";
+});
     document.getElementById("status").textContent = "Waiting for players...";
     return;
   }
@@ -479,6 +529,9 @@ function updateUI(){
 
   document.getElementById("status").textContent = currentName + " Turn";
 }
+
+
+
   
 // 🏆 WIN
 // SECOND ONE ✅
@@ -559,7 +612,10 @@ function celebrateWin() {
     }
   })();
 }
- 
+ // 🔥 CLEANUP when tab closes (extra safety)
+window.addEventListener("beforeunload", () => {
+  leaveRoom();
+});
 </script>
 
 </body>
