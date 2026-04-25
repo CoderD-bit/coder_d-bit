@@ -216,15 +216,15 @@ function createCustomRoom(){
     return;
   }
 
-  // ✅ NOW leave old room (after taking input)
-  leaveRoom();
+  leaveRoom(); // leave old room AFTER taking input
 
   roomId = input.toLowerCase();
   playerSymbol = "X";
 
   db.ref("rooms/" + roomId).once("value", snap => {
 
-    if(snap.exists()){
+    // ✅ NEW CONDITION HERE
+    if(snap.exists() && snap.val().playerX){
       alert("Room already exists ❌");
       return;
     }
@@ -290,17 +290,19 @@ function leaveRoom(){
     
   if(roomId){
 
-    // ✅ Instead of deleting room
+    // ✅ If creator (X) → delete full room
     if(playerSymbol === "X"){
-      db.ref("rooms/"+roomId+"/playerX").set(false);
-    } else if(playerSymbol === "O"){
+      db.ref("rooms/"+roomId).remove();
+    } 
+    // ✅ If O → just leave
+    else if(playerSymbol === "O"){
       db.ref("rooms/"+roomId+"/playerO").set(false);
     }
 
     db.ref("rooms/"+roomId).off();
   }
 
-  // reset everything
+  // reset UI
   roomId = "";
   playerSymbol = "";
   boardState = ["","","","","","","","",""];
