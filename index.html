@@ -415,19 +415,7 @@ function startGame(){
 function listenGame(){
   db.ref("rooms/"+roomId).on("value", snap=>{
     const data = snap.val();
-
-    // 🚨 ROOM DELETED
-    if(!data){
-      alert("Room closed!");
-      leaveRoom();
-      return;
-    }
-
-    // 🚨 AUTO DELETE if both players left
-    if(!data.playerX && !data.playerO){
-      db.ref("rooms/"+roomId).remove();
-      return;
-    }
+    if(!data) return;
 
     boardState = data.board;
     currentPlayer = data.turn;
@@ -435,7 +423,7 @@ function listenGame(){
     playerXName = data.playerXName || "";
     playerOName = data.playerOName || "";
 
-    updateUI();
+    updateUI(data); // ✅ pass data
 
     if(data.winner){
       showWin(data.winner);
@@ -443,6 +431,7 @@ function listenGame(){
   });
 }
 
+  
   
 // 🎯 CLICK
 function handleClick(e){
@@ -462,23 +451,25 @@ function handleClick(e){
 }
 
 // 🎨 UI
-function updateUI(){
+function updateUI(data){
   cells.forEach((c,i)=>{
     c.textContent = boardState[i];
     c.className="cell "+boardState[i];
   });
 
-  // ✅ FIX: Only show waiting if players NOT joined
-  if(!playerXName || !playerOName){
+  // ⏳ WAITING
+  if(!data.playerX || !data.playerO){
     document.getElementById("status").textContent = "Waiting for players...";
     return;
   }
 
-  // ✅ ALWAYS show turn once both names exist
+  // 🎯 SHOW TURN
   let currentName = currentPlayer === "X" ? playerXName : playerOName;
-
   document.getElementById("status").textContent = currentName + " Turn";
 }
+
+  
+  
   
 // 🏆 WIN
 // SECOND ONE ✅
