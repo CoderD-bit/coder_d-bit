@@ -209,8 +209,6 @@ function createRoom(){
 
 function createCustomRoom(){
 
-  leaveRoom(); // clear previous room
-
   let input = document.getElementById("roomId").value.trim();
 
   if(!input){
@@ -218,18 +216,19 @@ function createCustomRoom(){
     return;
   }
 
+  // ✅ NOW leave old room (after taking input)
+  leaveRoom();
+
   roomId = input.toLowerCase();
   playerSymbol = "X";
 
   db.ref("rooms/" + roomId).once("value", snap => {
 
-    // ❌ If room already exists
     if(snap.exists()){
       alert("Room already exists ❌");
       return;
     }
 
-    // ✅ Create new room
     db.ref("rooms/" + roomId).set({
       board: ["","","","","","","","",""],
       turn: "X",
@@ -244,8 +243,6 @@ function createCustomRoom(){
 
       document.getElementById("namePopup").classList.add("show");
       document.getElementById("nameO").disabled = true;
-
-      // ✅ show leave button AFTER success
       document.getElementById("leaveBtn").style.display = "inline-block";
     });
 
