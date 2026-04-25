@@ -286,16 +286,24 @@ function leaveRoom(){
   document.getElementById("leaveBtn").style.display = "none";
     
   if(roomId){
+
+    // ✅ DELETE ROOM if you are creator
+    if(playerSymbol === "X"){
+      db.ref("rooms/"+roomId).remove();
+    } else {
+      // only remove player O
+      db.ref("rooms/"+roomId+"/playerO").set(false);
+    }
+
     db.ref("rooms/"+roomId).off();
   }
 
-  // reset game
+  // reset everything
   roomId = "";
   playerSymbol = "";
   boardState = ["","","","","","","","",""];
   currentPlayer = "X";
 
-  // ✅ ADD THIS (important)
   playerXName = "X";
   playerOName = "O";
 
@@ -305,7 +313,6 @@ function leaveRoom(){
   document.getElementById("nameX").disabled = false;
   document.getElementById("nameO").disabled = false;
 
-  // clear UI
   document.getElementById("board").innerHTML = "";
   cells = [];
   init();
@@ -313,6 +320,7 @@ function leaveRoom(){
   document.getElementById("status").textContent = "Create or Join Room";
   document.getElementById("roomId").value = "";
 }
+
 
 // 🚀 START GAME
 function startGame(){
