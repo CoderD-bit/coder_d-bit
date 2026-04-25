@@ -124,6 +124,7 @@ h1 {
   <button onclick="createRoom()">Auto Create</button>
   <button onclick="createCustomRoom()">Create Custom</button>
   <button onclick="joinRoom()">Join Room</button>
+  <button onclick="leaveRoom()">Leave Room</button>
 </div>
 
 <div id="status">Create or Join Room</div>
@@ -175,6 +176,9 @@ let playerOName="O";
 
 // 🏠 CREATE ROOM
 function createRoom(){
+
+  leaveRoom(); // ⭐ ADD THIS LINE
+
   roomId = Math.random().toString(36).substr(2,5);
   document.getElementById("roomId").value = roomId;
 
@@ -190,20 +194,17 @@ function createRoom(){
     playerOName: ""
   })
   .then(() => {
-    // ✅ ONLY after data saved
     alert("Room ID: " + roomId);
-
     document.getElementById("namePopup").classList.add("show");
-
     document.getElementById("nameO").disabled = true;
-  })
-  .catch(err => {
-    console.error(err);
-    alert("Error creating room");
   });
 }
 
+
 function createCustomRoom(){
+
+  leaveRoom(); // ⭐ ADD THIS LINE
+
   let input = document.getElementById("roomId").value.trim();
 
   if(!input){
@@ -211,8 +212,7 @@ function createCustomRoom(){
     return;
   }
 
-  roomId = input.toLowerCase(); // optional: normalize
-
+  roomId = input.toLowerCase();
   playerSymbol="X";
 
   db.ref("rooms/"+roomId).once("value", snap=>{
@@ -232,13 +232,11 @@ function createCustomRoom(){
     })
     .then(()=>{
       alert("Room Created: " + roomId);
-
       document.getElementById("namePopup").classList.add("show");
       document.getElementById("nameO").disabled = true;
     });
   });
 }
-
 
   
 // 🔗 JOIN ROOM
@@ -276,7 +274,25 @@ function joinRoom(){
   });
 }
 
-  
+  function leaveRoom(){
+  if(roomId){
+    db.ref("rooms/"+roomId).off(); // stop listening old room
+  }
+
+  // reset game
+  roomId = "";
+  playerSymbol = "";
+  boardState = ["","","","","","","","",""];
+  currentPlayer = "X";
+
+  // clear UI
+  document.getElementById("board").innerHTML = "";
+  cells = [];
+  init();
+
+  document.getElementById("status").textContent = "Create or Join Room";
+}
+
 
 // 🚀 START GAME
 function startGame(){
