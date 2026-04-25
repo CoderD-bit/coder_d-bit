@@ -311,13 +311,18 @@ function leaveRoom(){
   init();
 
   document.getElementById("status").textContent = "Create or Join Room";
+  document.getElementById("roomId").value = "";
 }
 
 // 🚀 START GAME
 function startGame(){
 
-  // Disable button (prevent double click)
-  document.querySelector(".popup-box button").disabled = true;
+  const btn = document.querySelector(".popup-box button");
+  btn.disabled = true;
+
+  setTimeout(() => {
+    btn.disabled = false;
+  }, 2000); // re-enable after 2 sec
 
   if(playerSymbol==="X"){
 
