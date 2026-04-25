@@ -323,6 +323,18 @@ function updateUI(){
     c.className="cell "+boardState[i];
   });
 
+  // 🆕 Show waiting message
+  if(playerSymbol==="X" && !playerOName){
+    document.getElementById("status").textContent = "Waiting for Player O...";
+    return;
+  }
+
+  if(playerSymbol==="O" && !playerXName){
+    document.getElementById("status").textContent = "Waiting for Player X...";
+    return;
+  }
+
+  // Normal turn
   document.getElementById("status").textContent =
     (currentPlayer==="X"?playerXName:playerOName)+" Turn";
 }
