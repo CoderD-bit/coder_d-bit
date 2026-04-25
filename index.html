@@ -292,7 +292,7 @@ function leaveRoom(){
     
   if(roomId){
 
-    // 👇 First mark player as left
+    // 🔹 Step 1: mark player as left
     if(playerSymbol === "X"){
       db.ref("rooms/"+roomId+"/playerX").set(false);
       db.ref("rooms/"+roomId+"/playerXName").set("");
@@ -302,21 +302,23 @@ function leaveRoom(){
       db.ref("rooms/"+roomId+"/playerOName").set("");
     }
 
-    // 👇 Then check if room is empty
-    db.ref("rooms/"+roomId).once("value", snap => {
-      const data = snap.val();
+    // 🔹 Step 2: check after delay → delete if empty
+    setTimeout(() => {
+      db.ref("rooms/"+roomId).once("value", snap => {
+        const data = snap.val();
 
-      if(data && !data.playerX && !data.playerO){
-        // 🚀 DELETE ROOM if no players
-        db.ref("rooms/"+roomId).remove();
-        console.log("Room deleted (empty)");
-      }
-    });
+        if(data && !data.playerX && !data.playerO){
+          db.ref("rooms/"+roomId).remove();
+          console.log("Room deleted (empty)");
+        }
+      });
+    }, 300);
 
+    // 🔹 Step 3: stop listener
     db.ref("rooms/"+roomId).off();
   }
 
-  // reset local variables
+  // 🔹 Step 4: reset local variables
   roomId = "";
   playerSymbol = "";
 }
