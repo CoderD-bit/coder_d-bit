@@ -1,3 +1,5 @@
+still room is in use
+
 <!DOCTYPE html>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
@@ -225,46 +227,44 @@ function createCustomRoom(){
   roomId = input.toLowerCase();
   playerSymbol = "X";
 
-  db.ref("rooms/" + roomId)
-  .once("value", { source: "server" }) // 🔥 IMPORTANT
-  .then(snap => {
+  db.ref("rooms/" + roomId).once("value", snap => {
 
-    if(snap.exists()){
-      const data = snap.val();
+  if(snap.exists()){
+    const data = snap.val();
 
-      // 🧹 CLEAN STALE ROOM
-      if(!data.playerX && !data.playerO){
-        db.ref("rooms/" + roomId).remove();
-      }
-
-      // ❌ Block ONLY if both active
-      else if(data.playerX && data.playerO){
-        alert("Room already in use ❌");
-        return;
-      }
+    // 🧹 CLEAN STALE ROOM (both players gone)
+    if(!data.playerX && !data.playerO){
+      db.ref("rooms/" + roomId).remove();
     }
 
-    // ✅ CREATE ROOM
-    db.ref("rooms/" + roomId).set({
-      board: ["","","","","","","","",""],
-      turn: "X",
-      winner: "",
-      playerX: true,
-      playerO: false,
-      playerXName: "",
-      playerOName: ""
-    })
-    .then(() => {
-      alert("Room Created: " + roomId);
+    // ❌ Block only if BOTH players active
+    else if(data.playerX && data.playerO){
+      alert("Room already in use ❌");
+      return;
+    }
+  }
 
-      setupPresence();
+  // ✅ CREATE ROOM (allowed cases)
+  db.ref("rooms/" + roomId).set({
+    board: ["","","","","","","","",""],
+    turn: "X",
+    winner: "",
+    playerX: true,
+    playerO: false,
+    playerXName: "",
+    playerOName: ""
+  })
+  .then(() => {
+    alert("Room Created: " + roomId);
 
-      document.getElementById("namePopup").classList.add("show");
-      document.getElementById("nameO").disabled = true;
-      document.getElementById("leaveBtn").style.display = "inline-block";
-    });
+    setupPresence(); // keep this
 
+    document.getElementById("namePopup").classList.add("show");
+    document.getElementById("nameO").disabled = true;
+    document.getElementById("leaveBtn").style.display = "inline-block";
   });
+
+});
 }
   
 // 🔗 JOIN ROOM
@@ -415,7 +415,19 @@ function startGame(){
 function listenGame(){
   db.ref("rooms/"+roomId).on("value", snap=>{
     const data = snap.val();
-    if(!data) return;
+
+    // 🚨 ROOM DELETED
+    if(!data){
+      alert("Room closed!");
+      leaveRoom();
+      return;
+    }
+
+    // 🚨 AUTO DELETE if both players left
+    if(!data.playerX && !data.playerO){
+      db.ref("rooms/"+roomId).remove();
+      return;
+    }
 
     boardState = data.board;
     currentPlayer = data.turn;
@@ -423,7 +435,7 @@ function listenGame(){
     playerXName = data.playerXName || "";
     playerOName = data.playerOName || "";
 
-    updateUI(data); // ✅ pass data
+    updateUI();
 
     if(data.winner){
       showWin(data.winner);
@@ -431,7 +443,6 @@ function listenGame(){
   });
 }
 
-  
   
 // 🎯 CLICK
 function handleClick(e){
@@ -451,25 +462,23 @@ function handleClick(e){
 }
 
 // 🎨 UI
-function updateUI(data){
+function updateUI(){
   cells.forEach((c,i)=>{
     c.textContent = boardState[i];
     c.className="cell "+boardState[i];
   });
 
-  // ⏳ WAITING
-  if(!data.playerX || !data.playerO){
+  // ✅ FIX: Only show waiting if players NOT joined
+  if(!playerXName || !playerOName){
     document.getElementById("status").textContent = "Waiting for players...";
     return;
   }
 
-  // 🎯 SHOW TURN
+  // ✅ ALWAYS show turn once both names exist
   let currentName = currentPlayer === "X" ? playerXName : playerOName;
+
   document.getElementById("status").textContent = currentName + " Turn";
 }
-
-  
-  
   
 // 🏆 WIN
 // SECOND ONE ✅
