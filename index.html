@@ -209,25 +209,28 @@ function createRoom(){
 
 function createCustomRoom(){
 
-  leaveRoom(); // ⭐ ADD THIS LINE
+  leaveRoom(); // clear previous room
 
   let input = document.getElementById("roomId").value.trim();
-    
+
   if(!input){
     alert("Enter Room Name");
     return;
   }
 
   roomId = input.toLowerCase();
-  playerSymbol="X";
+  playerSymbol = "X";
 
-  db.ref("rooms/"+roomId).once("value", snap=>{
+  db.ref("rooms/" + roomId).once("value", snap => {
+
+    // ❌ If room already exists
     if(snap.exists()){
       alert("Room already exists ❌");
       return;
     }
 
-    db.ref("rooms/"+roomId).set({
+    // ✅ Create new room
+    db.ref("rooms/" + roomId).set({
       board: ["","","","","","","","",""],
       turn: "X",
       winner: "",
@@ -236,15 +239,18 @@ function createCustomRoom(){
       playerXName: "",
       playerOName: ""
     })
-    .then(()=>{
+    .then(() => {
       alert("Room Created: " + roomId);
+
       document.getElementById("namePopup").classList.add("show");
       document.getElementById("nameO").disabled = true;
+
+      // ✅ show leave button AFTER success
       document.getElementById("leaveBtn").style.display = "inline-block";
     });
+
   });
 }
-
   
 // 🔗 JOIN ROOM
 function joinRoom(){
