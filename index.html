@@ -351,8 +351,8 @@ function listenGame(){
     boardState = data.board;
     currentPlayer = data.turn;
 
-    playerXName = data.playerXName || "X";
-    playerOName = data.playerOName || "O";
+    playerXName = data.playerXName;
+    playerOName = data.playerOName;
 
     if(playerXName){
   document.getElementById("nameX").disabled = true;
@@ -393,32 +393,24 @@ function updateUI(){
     c.className="cell "+boardState[i];
   });
 
-  // 🆕 Show waiting message
-  if(playerSymbol==="X" && (!playerOName || playerOName === "O")){
-    document.getElementById("status").textContent = "Waiting for Player O...";
+  // ⏳ WAIT until names are actually entered
+  if(!playerXName || !playerOName){
+    document.getElementById("status").textContent = "Waiting for players to enter names...";
     return;
   }
 
-  if(playerSymbol==="O" && (!playerXName || playerXName === "X")){
-    document.getElementById("status").textContent = "Waiting for Player X...";
-    return;
-  }
-
+  // 🎯 Show real player names
   let currentName = currentPlayer === "X" ? playerXName : playerOName;
 
- // fallback if name not yet loaded
- if(currentName === "X" || currentName === "O"){
-   currentName = currentPlayer;
- }
-
-document.getElementById("status").textContent = currentName + " Turn";
+  document.getElementById("status").textContent = currentName + " Turn";
 }
 
+  
 // 🏆 WIN
 // SECOND ONE ✅
 function showWin(w){
   document.getElementById("popupMessage").textContent =
-    (w==="X"?playerXName:playerOName)+" Wins!";
+    (w==="X" ? playerXName : playerOName)
 
   document.getElementById("winPopup").classList.add("show");
 
