@@ -238,10 +238,10 @@
   const scoreboard = document.getElementById('scoreboard');
 
   let currentPlayer = 'X';
-  let gameActive = true;
+  let gameActive = false;
   let cells = [];
-  let playerXName = 'Player X';
-  let playerOName = 'Player O';
+  let playerXName = '';
+  let playerOName = '';
   let round = 1;
   let totalRounds = 3;
   let scoreX = 0;
@@ -252,28 +252,42 @@
     const nameO = document.getElementById('nameO').value.trim();
     const rounds = parseInt(document.getElementById('roundsInput').value);
 
-    if (nameX) playerXName = nameX;
-    if (nameO) playerOName = nameO;
-    if (rounds > 0) totalRounds = rounds;
+    // ✅ Validation (important fix)
+    if (!nameX || !nameO) {
+      alert("Enter both player names");
+      return;
+    }
+
+    if (!rounds || rounds <= 0) {
+      alert("Enter valid number of rounds");
+      return;
+    }
+
+    playerXName = nameX;
+    playerOName = nameO;
+    totalRounds = rounds;
 
     document.getElementById('namePopup').classList.remove('show');
 
+    gameActive = true;
+    currentPlayer = 'X';
+
     status.textContent = `${playerXName}'s Turn (X)`;
     roundDisplay.textContent = `Round: ${round} / ${totalRounds}`;
-    updateScoreboard(); // ✅ FIX: Update immediately
+    updateScoreboard();
   }
 
   function resetBoard() {
     currentPlayer = 'X';
     gameActive = true;
+
     cells.forEach(cell => {
       cell.textContent = '';
-      cell.classList.remove('X', 'O');
+      cell.classList.remove('X', 'O', 'win'); // ✅ clear win highlight
     });
-    if (round <= totalRounds) {
-      status.textContent = `${playerXName}'s Turn (X)`;
-      roundDisplay.textContent = `Round: ${round} / ${totalRounds}`;
-    }
+
+    status.textContent = `${playerXName}'s Turn (X)`;
+    roundDisplay.textContent = `Round: ${round} / ${totalRounds}`;
   }
 
   function updateScoreboard() {
@@ -281,9 +295,6 @@
   }
 
   function showFinalResult() {
-    if (popupShown) return;
-    popupShown = true;
-
     let message = "";
 
     if (scoreX > scoreO) {
@@ -296,11 +307,12 @@
 
     popupMessage.textContent = message;
     winPopup.classList.add('show');
-    gameActive = false;
 
     const popupButton = document.querySelector("#winPopup button");
     popupButton.textContent = "Play Again";
     popupButton.onclick = () => location.reload();
+
+    gameActive = false;
   }
 
   function checkWin() {
@@ -309,44 +321,65 @@
       [0, 3, 6], [1, 4, 7], [2, 5, 8],
       [0, 4, 8], [2, 4, 6]
     ];
-    return combos.find(combo => {
+
+    for (let combo of combos) {
       const [a, b, c] = combo;
-      return cells[a].textContent &&
+      if (
+        cells[a].textContent &&
         cells[a].textContent === cells[b].textContent &&
-        cells[a].textContent === cells[c].textContent;
-    });
+        cells[a].textContent === cells[c].textContent
+      ) {
+        return combo;
+      }
+    }
+    return null;
   }
 
   function handleClick(e) {
     const cell = e.target;
+
     if (!gameActive || cell.textContent) return;
 
     cell.textContent = currentPlayer;
     cell.classList.add(currentPlayer);
 
     const winCombo = checkWin();
+
     if (winCombo) {
       gameActive = false;
+
+      // ✅ highlight winning cells
+      winCombo.forEach(i => cells[i].classList.add('win'));
+
       const winnerName = currentPlayer === 'X' ? playerXName : playerOName;
+
       popupMessage.textContent = `🎉 ${winnerName} wins this round!`;
       winPopup.classList.add('show');
+
       if (currentPlayer === 'X') scoreX++;
       else scoreO++;
+
       updateScoreboard();
-    } else if ([...cells].every(cell => cell.textContent)) {
+      return;
+    }
+
+    if ([...cells].every(cell => cell.textContent)) {
       gameActive = false;
       popupMessage.textContent = "It's a draw!";
       winPopup.classList.add('show');
-    } else {
-      currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
-      const nextPlayer = currentPlayer === 'X' ? playerXName : playerOName;
-      status.textContent = `${nextPlayer}'s Turn (${currentPlayer})`;
+      return;
     }
+
+    currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
+    const nextPlayer = currentPlayer === 'X' ? playerXName : playerOName;
+    status.textContent = `${nextPlayer}'s Turn (${currentPlayer})`;
   }
 
   function closePopup() {
     winPopup.classList.remove('show');
+
     round++;
+
     if (round > totalRounds) {
       showFinalResult();
     } else {
@@ -355,6 +388,9 @@
   }
 
   function init() {
+    board.innerHTML = "";
+    cells = [];
+
     for (let i = 0; i < 9; i++) {
       const cell = document.createElement('div');
       cell.classList.add('cell');
@@ -366,7 +402,6 @@
 
   init();
 </script>
-
 </body>
 
 </html>
