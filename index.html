@@ -179,6 +179,9 @@ let cells = [];
 let playerXName="X";
 let playerOName="O";
 
+
+
+  
 // 🏠 CREATE ROOM
 function createRoom(){
 
@@ -210,6 +213,9 @@ function createRoom(){
 }
 
 
+
+
+  
 function createCustomRoom(){
 
   let input = document.getElementById("roomId").value.trim();
@@ -265,6 +271,10 @@ function createCustomRoom(){
 
 });
 }
+
+
+
+
   
 // 🔗 JOIN ROOM
 function joinRoom(){
@@ -303,6 +313,10 @@ function joinRoom(){
   });
 }  
 
+
+
+
+  
 function leaveRoom(){
   document.getElementById("leaveBtn").style.display = "none";
     
@@ -348,6 +362,9 @@ else if(playerSymbol === "O"){
 }
 
 
+
+
+  
 function setupPresence(){
   if(!roomId || !playerSymbol) return;
 
@@ -383,50 +400,39 @@ function startGame(){
     btn.disabled = false;
   }, 2000); // re-enable after 2 sec
 
+  const nameXInput = document.getElementById("nameX").value.trim();
+  const nameOInput = document.getElementById("nameO").value.trim();
+
   if(playerSymbol==="X"){
-
-    db.ref("rooms/"+roomId+"/playerXName").transaction(current=>{
-      if(current === ""){
-        return document.getElementById("nameX").value || "X";
-      }
-      return; // already set → do nothing
-    });
-
-  } else if(playerSymbol==="O"){
-
-    db.ref("rooms/"+roomId+"/playerOName").transaction(current=>{
-      if(current === ""){
-        return document.getElementById("nameO").value || "O";
-      }
-      return;
-    });
-
+    db.ref("rooms/"+roomId+"/playerXName").set(nameXInput || "Player X");
+  } else {
+    db.ref("rooms/"+roomId+"/playerOName").set(nameOInput || "Player O");
+  }
+  
+    document.getElementById("namePopup").classList.remove("show");
+  
+    listenGame();
   }
 
-  document.getElementById("namePopup").classList.remove("show");
-
-  listenGame();
-}
-
   
 
+
+
+
+  
 // 👂 LISTEN
 function listenGame(){
-  let dataReady = false;
 
-  dataReady = data.playerX && data.playerO;
-  
   db.ref("rooms/"+roomId).on("value", snap=>{
     const data = snap.val();
 
-    // 🚨 ROOM DELETED
     if(!data){
       alert("Room closed!");
       leaveRoom();
       return;
     }
 
-    // 🚨 AUTO DELETE if both players left
+    // auto delete if empty
     if(!data.playerX && !data.playerO){
       db.ref("rooms/"+roomId).remove();
       return;
@@ -438,6 +444,7 @@ function listenGame(){
     playerXName = data.playerXName || "";
     playerOName = data.playerOName || "";
 
+    // ✅ CORRECT readiness check
     const dataReady = data.playerX && data.playerO;
 
     updateUI(dataReady);
@@ -447,7 +454,6 @@ function listenGame(){
     }
   });
 }
-
 
 
   
@@ -478,22 +484,29 @@ function handleClick(e){
 
 // 🎨 UI
 function updateUI(dataReady){
+
   cells.forEach((c,i)=>{
     c.textContent = boardState[i];
     c.className="cell "+boardState[i];
   });
 
-  // ✅ FIX: Only show waiting if players NOT joined
+  // ❌ if players not ready
   if(!dataReady){
-  document.getElementById("status").textContent = "Waiting for players...";
-  return;
-}
+    document.getElementById("status").textContent = "Waiting for players...";
+    return;
+  }
 
-  // ✅ ALWAYS show turn once both names exist
+  // ❌ if names not entered yet
+  if(!playerXName || !playerOName){
+    document.getElementById("status").textContent = "Waiting for names...";
+    return;
+  }
+
+  // ✅ show turn
   let currentName = currentPlayer === "X" ? playerXName : playerOName;
 
   document.getElementById("status").textContent = currentName + " Turn";
-}
+}    
 
 
 
