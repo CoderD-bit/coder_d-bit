@@ -170,6 +170,7 @@ const db = firebase.database();
 
   
 // 🎮 Variables
+let roomListener = null;
 let roomId = "";
 let playerSymbol = "";
 let boardState = ["","","","","","","","",""];
@@ -334,8 +335,11 @@ else if(playerSymbol === "O"){
     });
 
     // 🔹 stop listener
-    db.ref("rooms/"+roomId).off();
-  }
+    // 🔹 stop listener properly
+if(roomListener){
+  roomListener.off();
+  roomListener = null;
+}
 
   // 🔹 clear session
   localStorage.removeItem("roomId");
@@ -412,23 +416,22 @@ function startGame(){
 
 // 👂 LISTEN
 function listenGame(){
-  let dataReady = false;
 
-  dataReady = data.playerX && data.playerO;
-  
-  db.ref("rooms/"+roomId).on("value", snap=>{
+  const roomRef = db.ref("rooms/"+roomId);
+
+  roomListener = roomRef; // ✅ store reference
+
+  roomRef.on("value", snap=>{
     const data = snap.val();
 
-    // 🚨 ROOM DELETED
     if(!data){
       alert("Room closed!");
       leaveRoom();
       return;
     }
 
-    // 🚨 AUTO DELETE if both players left
     if(!data.playerX && !data.playerO){
-      db.ref("rooms/"+roomId).remove();
+      roomRef.remove();
       return;
     }
 
